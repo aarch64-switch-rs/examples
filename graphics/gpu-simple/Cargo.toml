@@ -1,0 +1,30 @@
+[package]
+name = "gpu-simple"
+version = "0.1.0"
+authors = ["XorTroll"]
+edition = "2018"
+
+[dependencies.nx]
+path = "../../../nx"
+
+[dependencies.font8x8]
+version = "0.2"
+default-features = false
+features = ["unicode"]
+
+[dependencies.rusttype]
+version = "0.9.2"
+default-features = false
+features = ["libm-math"]
+
+[dependencies.libm]
+version = "0.2.1"
+default-features = false
+features = []
+
+[package.metadata.sprinkle.nro]
+
+[package.metadata.sprinkle.nro.nacp]
+name = "gpu-simple"
+author = "XorTroll"
+version = "Test"

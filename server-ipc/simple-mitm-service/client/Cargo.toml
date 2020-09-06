@@ -1,0 +1,16 @@
+[package]
+name = "client"
+version = "0.1.0"
+authors = ["XorTroll"]
+edition = "2018"
+
+[dependencies]
+nx = { path = "../../../../nx" }
+paste = "1.0"
+
+[package.metadata.sprinkle.nro]
+
+[package.metadata.sprinkle.nro.nacp]
+name = "simple-mitm-service-client"
+author = "XorTroll"
+version = "Test"
