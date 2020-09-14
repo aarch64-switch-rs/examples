@@ -99,10 +99,7 @@ pub fn gpu_main() -> Result<()> {
     let controllers = [hid::ControllerId::Player1, hid::ControllerId::Player2, hid::ControllerId::Player3, hid::ControllerId::Player4, hid::ControllerId::Player5, hid::ControllerId::Player6, hid::ControllerId::Player7, hid::ControllerId::Player8, hid::ControllerId::Handheld];
     let mut input_ctx = input::InputContext::new(0, supported_tags, &controllers)?;
 
-    let width: u32 = 1280;
-    let height: u32 = 720;
     let color_fmt = gpu::ColorFormat::A8B8G8R8;
-
     let mut squares: Vec<Square> = Vec::new();
 
     let c_white = ui2d::RGBA8::new_rgb(0xFF, 0xFF, 0xFF);
