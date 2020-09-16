@@ -49,9 +49,9 @@ impl sf::IObject for DemoService {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table!(
-            test_buf: 1
-        )
+        vec! [
+            ipc_interface_make_command_meta!(test_buf: 1)
+        ]
     }
 }
 

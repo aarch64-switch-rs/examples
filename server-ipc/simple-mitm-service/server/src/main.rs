@@ -34,9 +34,9 @@ impl sf::IObject for AccountServiceForApplication {
     }
     
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table!(
-            get_user_count: 0
-        )
+        vec! [
+            ipc_interface_make_command_meta!(get_user_count: 0)
+        ]
     }
 }
 
@@ -48,8 +48,8 @@ impl IAccountServiceForApplication for AccountServiceForApplication {
     }
 }
 
-impl server::IServerObject for AccountServiceForApplication {
-    fn new() -> Self {
+impl server::IMitmServerObject for AccountServiceForApplication {
+    fn new(_info: sm::MitmProcessInfo) -> Self {
         Self { session: sf::Session::new() }
     }
 }
@@ -74,21 +74,14 @@ pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize 
     }
 }
 
-pub fn server_main() -> Result<()> {
-    const POINTER_BUF_SIZE: usize = 0;
-    let mut manager: server::ServerManager<POINTER_BUF_SIZE> = server::ServerManager::new();
-    manager.register_mitm_service_server::<AccountServiceForApplication>()?;
-    manager.loop_process()?;
-
-    Ok(())
-}
+const POINTER_BUF_SIZE: usize = 0;
+type Manager = server::ServerManager<POINTER_BUF_SIZE>;
 
 #[no_mangle]
 pub fn main() -> Result<()> {
-    match server_main() {
-        Err(rc) => assert::assert(assert::AssertMode::FatalThrow, rc),
-        _ => {}
-    }
+    let mut manager = Manager::new();
+    manager.register_mitm_service_server::<AccountServiceForApplication>()?;
+    manager.loop_process()?;
 
     Ok(())
 }

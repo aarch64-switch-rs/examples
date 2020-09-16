@@ -13,7 +13,6 @@ use nx::results;
 use nx::util;
 use nx::diag::assert;
 use nx::diag::log;
-use nx::diag::log::Logger;
 use nx::ipc::sf;
 use nx::service;
 use nx::service::applet;
@@ -56,7 +55,8 @@ impl CommonArguments {
     }
 }
 
-pub fn applet_test() -> Result<()> {
+#[no_mangle]
+pub fn main() -> Result<()> {
     let applet_proxy_srv = service::new_service_object::<applet::AllSystemAppletProxiesService>()?;
     
     let attr: applet::AppletAttribute = unsafe { core::mem::zeroed() };
@@ -90,15 +90,6 @@ pub fn applet_test() -> Result<()> {
     svc::wait_synchronization(&event_handle.handle, 1, -1)?;
 
     svc::close_handle(event_handle.handle)?;
-
-    Ok(())
-}
-
-#[no_mangle]
-pub fn main() -> Result<()> {
-    if let Err(rc) = applet_test() {
-        diag_result_log_assert!(log::LmLogger, assert::AssertMode::FatalThrow => rc);
-    }
 
     Ok(())
 }

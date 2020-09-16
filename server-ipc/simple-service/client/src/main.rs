@@ -32,9 +32,9 @@ impl sf::IObject for DemoService {
     }
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table!(
-            test_buf: 1
-        )
+        vec! [
+            ipc_interface_make_command_meta!(test_buf: 1)
+        ]
     }
 }
 
@@ -76,23 +76,14 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     }
 }
 
-pub fn client_main() -> Result<()> {
+#[no_mangle]
+pub fn main() -> Result<()> {
     let demosrv = service::new_service_object::<DemoService>()?;
 
     let mut data: [u32; 5] = [0; 5];
     demosrv.get().test_buf(sf::Buffer::from_mut(data.as_mut_ptr(), data.len() * core::mem::size_of::<u32>()))?;
 
     diag_log!(log::LmLogger { log::LogSeverity::Trace, false } => "Got: {} {} {} {} {}", data[0], data[1], data[2], data[3], data[4]);
-
-    Ok(())
-}
-
-#[no_mangle]
-pub fn main() -> Result<()> {
-    match client_main() {
-        Err(rc) => diag_result_log_assert!(log::LmLogger, assert::AssertMode::FatalThrow => rc),
-        _ => {}
-    }
 
     Ok(())
 }

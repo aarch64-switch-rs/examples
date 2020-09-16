@@ -33,9 +33,9 @@ impl sf::IObject for AccountServiceForApplication {
     }
     
     fn get_command_table(&self) -> sf::CommandMetadataTable {
-        ipc_server_make_command_table!(
-            get_user_count: 0
-        )
+        vec! [
+            ipc_interface_make_command_meta!(get_user_count: 0)
+        ]
     }
 }
 
@@ -77,21 +77,12 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     }
 }
 
-pub fn client_main() -> Result<()> {
+#[no_mangle]
+pub fn main() -> Result<()> {
     let acc = service::new_service_object::<AccountServiceForApplication>()?;
 
     let count = acc.get().get_user_count()?;
     diag_log!(log::LmLogger { log::LogSeverity::Error, true } => "Got user count: {}", count);
-
-    Ok(())
-}
-
-#[no_mangle]
-pub fn main() -> Result<()> {
-    match client_main() {
-        Err(rc) => diag_result_log_assert!(log::LmLogger, assert::AssertMode::FatalThrow => rc),
-        _ => {}
-    }
 
     Ok(())
 }
