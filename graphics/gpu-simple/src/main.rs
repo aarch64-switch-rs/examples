@@ -8,7 +8,6 @@ use alloc::string::String;
 extern crate nx;
 use nx::svc;
 use nx::result::*;
-use nx::results;
 use nx::util;
 use nx::diag::assert;
 use nx::diag::log;
@@ -152,5 +151,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::on_panic_handler::<log::LmLogger>(info, assert::AssertMode::FatalThrow, results::lib::assert::ResultAssertionFailed::make())
+    util::simple_panic_handler::<log::LmLogger>(info, assert::AssertMode::FatalThrow)
 }
