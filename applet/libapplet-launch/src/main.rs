@@ -96,5 +96,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::on_panic_handler::<log::LmLogger>(info, assert::AssertMode::FatalThrow, results::lib::assert::ResultAssertionFailed::make())
+    util::simple_panic_handler::<log::LmLogger>(info, assert::AssertMode::FatalThrow)
 }
