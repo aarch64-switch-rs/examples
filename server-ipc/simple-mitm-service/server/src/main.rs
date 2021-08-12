@@ -42,7 +42,7 @@ impl sf::IObject for PsmServer {
 impl IPsmServer for PsmServer {
     fn get_battery_charge_percentage(&mut self) -> Result<u32> {
         let stub: u32 = 69;
-        diag_log!(log::LmLogger { log::LogSeverity::Error, true } => "Returning stubbed battery percentage as {}%...\n", stub);
+        diag_log!(log::LmLogger { log::LogSeverity::Trace, true } => "Returning stubbed battery percentage as {}%...\n", stub);
         Ok(stub)
     }
 }
