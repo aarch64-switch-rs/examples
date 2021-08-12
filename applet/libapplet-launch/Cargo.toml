@@ -8,4 +8,4 @@ edition = "2018"
 nx = { git = "https://github.com/aarch64-switch-rs/nx" }
 
 [package.metadata.sprinkle.nro]
-nacp = { name = "libapplet-launch", author = "XorTroll", version = "Test" }
+nacp = { name = "libapplet-launch", author = "XorTroll", version = "Example" }

@@ -9,7 +9,6 @@ extern crate alloc;
 
 use nx::svc;
 use nx::result::*;
-use nx::results;
 use nx::util;
 use nx::diag::assert;
 use nx::diag::log;
@@ -19,7 +18,7 @@ use nx::service;
 use core::panic;
 
 pub trait IDemoService {
-    ipc_interface_define_command!(test_buf: (buf: sf::OutPointerBuffer) => ());
+    ipc_cmif_interface_define_command!(test_buf: (buf: sf::OutPointerBuffer) => ());
 }
 
 pub struct DemoService {
@@ -33,7 +32,7 @@ impl sf::IObject for DemoService {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            ipc_interface_make_command_meta!(test_buf: 1)
+            ipc_cmif_interface_make_command_meta!(test_buf: 1)
         ]
     }
 }

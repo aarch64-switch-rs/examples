@@ -8,4 +8,4 @@ edition = "2018"
 nx = { git = "https://github.com/aarch64-switch-rs/nx" }
 
 [package.metadata.sprinkle.nro]
-nacp = { name = "fs-api", author = "XorTroll", version = "Test" }
+nacp = { name = "fs-api", author = "XorTroll", version = "Example" }

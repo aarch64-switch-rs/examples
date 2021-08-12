@@ -1,16 +1,14 @@
 #![no_std]
 #![no_main]
 
-#[macro_use]
 extern crate alloc;
 
-#[macro_use]
 extern crate nx;
 use nx::svc;
 use nx::arm;
 use nx::result::*;
-use nx::results;
 use nx::util;
+use nx::wait;
 use nx::diag::assert;
 use nx::diag::log;
 use nx::ipc::sf;
@@ -62,7 +60,7 @@ pub fn main() -> Result<()> {
     let attr: applet::AppletAttribute = unsafe { core::mem::zeroed() };
     let lib_applet_proxy = applet_proxy_srv.get().open_library_applet_proxy(sf::ProcessId::new(), sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Buffer::from_var(&attr))?.to::<applet::LibraryAppletProxy>();
     let lib_applet_creator = lib_applet_proxy.get().get_library_applet_creator()?.to::<applet::LibraryAppletCreator>();
-    let lib_applet_accessor = lib_applet_creator.get().create_library_applet(applet::AppletId::PlayerSelect, applet::LibraryAppletMode::AllForeground)?.to::<applet::LibraryAppletAccessor>();
+    let lib_applet_accessor = lib_applet_creator.get().create_library_applet(applet::AppletId::LibraryAppletPlayerSelect, applet::LibraryAppletMode::AllForeground)?.to::<applet::LibraryAppletAccessor>();
 
     {
         let common_args = CommonArguments::new(1, 0x20000, 0, false);
@@ -87,7 +85,8 @@ pub fn main() -> Result<()> {
 
     let event_handle = lib_applet_accessor.get().get_applet_state_changed_event()?;
     lib_applet_accessor.get().start()?;
-    svc::wait_synchronization(&event_handle.handle, 1, -1)?;
+
+    wait::wait_handles(&[event_handle.handle], -1)?;
 
     svc::close_handle(event_handle.handle)?;
 
