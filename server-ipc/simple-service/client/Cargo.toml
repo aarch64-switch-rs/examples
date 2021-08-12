@@ -9,4 +9,4 @@ nx = { git = "https://github.com/aarch64-switch-rs/nx" }
 paste = "1.0"
 
 [package.metadata.sprinkle.nro]
-nacp = { name = "simple-service-client", author = "XorTroll", version = "Test" }
+nacp = { name = "simple-service-client", author = "XorTroll", version = "Example" }

@@ -1,3 +1,3 @@
 # examples
 
-Project examples of homebrew written with this organization's tools
+Project examples of Nintendo Switch homebrew written with this organization's tools

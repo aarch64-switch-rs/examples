@@ -10,7 +10,6 @@ extern crate alloc;
 extern crate paste;
 
 use nx::result::*;
-use nx::results;
 use nx::util;
 use nx::diag::assert;
 use nx::diag::log;
@@ -20,7 +19,7 @@ use nx::ipc::server;
 use core::panic;
 
 pub trait IDemoService {
-    ipc_interface_define_command!(test_buf: (buf: sf::OutPointerBuffer) => ());
+    ipc_cmif_interface_define_command!(test_buf: (buf: sf::OutPointerBuffer) => ());
 }
 
 pub struct DemoService {
@@ -50,7 +49,7 @@ impl sf::IObject for DemoService {
 
     fn get_command_table(&self) -> sf::CommandMetadataTable {
         vec! [
-            ipc_interface_make_command_meta!(test_buf: 1)
+            ipc_cmif_interface_make_command_meta!(test_buf: 1)
         ]
     }
 }
@@ -83,7 +82,7 @@ pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize 
 
 pub fn server_main() -> Result<()> {
     const POINTER_BUF_SIZE: usize = 0x400;
-    let mut manager: server::ServerManager<POINTER_BUF_SIZE> = server::ServerManager::new();
+    let mut manager: server::ServerManager<POINTER_BUF_SIZE> = server::ServerManager::new()?;
 
     manager.register_service_server::<DemoService>()?;
     manager.loop_process()?;

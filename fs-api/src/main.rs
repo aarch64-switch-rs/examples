@@ -5,24 +5,13 @@
 extern crate alloc;
 use alloc::string::String;
 
-#[macro_use]
 extern crate nx;
 use nx::fs;
 use nx::svc;
 use nx::result::*;
-use nx::results;
 use nx::util;
 use nx::diag::assert;
 use nx::diag::log;
-use nx::ipc::sf;
-use nx::service;
-use nx::service::applet;
-use nx::service::applet::IAllSystemAppletProxiesService;
-use nx::service::applet::ILibraryAppletProxy;
-use nx::service::applet::ILibraryAppletCreator;
-use nx::service::applet::ILibraryAppletAccessor;
-use nx::service::applet::IStorage;
-use nx::service::applet::IStorageAccessor;
 
 use core::panic;
 
