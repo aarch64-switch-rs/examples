@@ -7,5 +7,5 @@ edition = "2018"
 [dependencies]
 nx = { git = "https://github.com/aarch64-switch-rs/nx" }
 
-[package.metadata.sprinkle.nro]
+[package.metadata.nx.nro]
 nacp = { name = "libapplet-launch", author = "XorTroll", version = "Example" }

@@ -22,5 +22,5 @@ version = "0.2.1"
 default-features = false
 features = []
 
-[package.metadata.sprinkle.nro]
+[package.metadata.nx.nro]
 nacp = { name = "gpu-simple", author = "XorTroll", version = "Example" }

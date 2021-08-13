@@ -8,5 +8,5 @@ edition = "2018"
 nx = { git = "https://github.com/aarch64-switch-rs/nx" }
 paste = "1.0"
 
-[package.metadata.sprinkle.nsp]
+[package.metadata.nx.nsp]
 npdm = "npdm.json"

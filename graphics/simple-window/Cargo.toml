@@ -22,5 +22,5 @@ version = "0.2.1"
 default-features = false
 features = []
 
-[package.metadata.sprinkle.nsp]
+[package.metadata.nx.nsp]
 npdm = "npdm.json"
