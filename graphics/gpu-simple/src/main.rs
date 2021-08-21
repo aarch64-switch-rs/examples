@@ -91,7 +91,8 @@ impl Square {
     }
 }
 
-pub fn gpu_main() -> Result<()> {
+#[no_mangle]
+pub fn main() -> Result<()> {
     let mut gpu_ctx: gpu::GpuContext<vi::SystemRootService, nv::AppletNvDrvService> = gpu::GpuContext::new(0x800000)?;
 
     let supported_tags = hid::NpadStyleTag::ProController() | hid::NpadStyleTag::Handheld() | hid::NpadStyleTag::JoyconPair() | hid::NpadStyleTag::JoyconLeft() | hid::NpadStyleTag::JoyconRight() | hid::NpadStyleTag::SystemExt() | hid::NpadStyleTag::System();
@@ -135,15 +136,6 @@ pub fn gpu_main() -> Result<()> {
         }
 
         surface.end()?;
-    }
-
-    Ok(())
-}
-
-#[no_mangle]
-pub fn main() -> Result<()> {
-    if let Err(rc) = gpu_main() {
-        assert::assert(assert::AssertMode::FatalThrow, rc);
     }
 
     Ok(())
