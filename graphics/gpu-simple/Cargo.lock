@@ -48,12 +48,12 @@ checksum = "d0b725207570aa16096962d0b20c79f8a543df2280bd3c903022b9b0b4d7ea68"
 [[package]]
 name = "logpacket"
 version = "0.1.0"
-source = "git+https://github.com/aarch64-switch-rs/logpacket#eb8b99fcb822f396f6fd937b9d2efd46d85a6061"
+source = "git+https://github.com/aarch64-switch-rs/logpacket#d807c993fb4578e3809d91e3484c7d97f59eb3db"
 
 [[package]]
 name = "nx"
 version = "0.1.0"
-source = "git+https://github.com/aarch64-switch-rs/nx#5f06fb7fd48f507db5e2e88426582d8b0a36e974"
+source = "git+https://github.com/aarch64-switch-rs/nx#5f9819cba4e02db8b8fb8d4e76d3aac3f0b3d112"
 dependencies = [
  "arrayvec",
  "linked_list_allocator",
