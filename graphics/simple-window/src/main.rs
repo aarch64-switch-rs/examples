@@ -45,7 +45,8 @@ fn draw_circle(surface: &mut ui2d::SurfaceEx::<nv::AppletNvDrvService>, x: i32, 
     }
 }
 
-pub fn gpu_main() -> Result<()> {
+#[no_mangle]
+pub fn main() -> Result<()> {
     let mut gpu_ctx: gpu::GpuContext<vi::ManagerRootService, nv::AppletNvDrvService> = gpu::GpuContext::new(0x40000)?;
 
     let supported_tags = hid::NpadStyleTag::ProController() | hid::NpadStyleTag::Handheld() | hid::NpadStyleTag::JoyconPair() | hid::NpadStyleTag::JoyconLeft() | hid::NpadStyleTag::JoyconRight() | hid::NpadStyleTag::SystemExt() | hid::NpadStyleTag::System();
@@ -98,16 +99,7 @@ pub fn gpu_main() -> Result<()> {
     Ok(())
 }
 
-#[no_mangle]
-pub fn main() -> Result<()> {
-    if let Err(rc) = gpu_main() {
-        diag_result_log_assert!(log::LmLogger, assert::AssertMode::FatalThrow => rc);
-    }
-
-    Ok(())
-}
-
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, assert::AssertMode::FatalThrow)
+    util::simple_panic_handler::<log::LmLogger>(info, assert::AssertLevel::FatalThrow())
 }

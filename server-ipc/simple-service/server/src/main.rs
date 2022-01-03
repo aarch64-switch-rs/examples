@@ -80,7 +80,8 @@ pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize 
     }
 }
 
-pub fn server_main() -> Result<()> {
+#[no_mangle]
+pub fn main() -> Result<()> {
     const POINTER_BUF_SIZE: usize = 0x400;
     let mut manager: server::ServerManager<POINTER_BUF_SIZE> = server::ServerManager::new()?;
 
@@ -90,17 +91,7 @@ pub fn server_main() -> Result<()> {
     Ok(())
 }
 
-#[no_mangle]
-pub fn main() -> Result<()> {
-    match server_main() {
-        Err(rc) => diag_result_log_assert!(log::LmLogger, assert::AssertMode::FatalThrow => rc),
-        _ => {}
-    }
-
-    Ok(())
-}
-
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, assert::AssertMode::FatalThrow)
+    util::simple_panic_handler::<log::LmLogger>(info, assert::AssertLevel::FatalThrow())
 }

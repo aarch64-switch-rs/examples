@@ -77,10 +77,10 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 
 #[no_mangle]
 pub fn main() -> Result<()> {
-    let demosrv = service::new_service_object::<DemoService>()?;
+    let demo_srv = service::new_service_object::<DemoService>()?;
 
     let mut data: [u32; 5] = [0; 5];
-    demosrv.get().test_buf(sf::Buffer::from_mut(data.as_mut_ptr(), data.len() * core::mem::size_of::<u32>()))?;
+    demo_srv.get().test_buf(sf::Buffer::from_mut(data.as_mut_ptr(), data.len() * core::mem::size_of::<u32>()))?;
 
     diag_log!(log::LmLogger { log::LogSeverity::Trace, false } => "Got: {} {} {} {} {}", data[0], data[1], data[2], data[3], data[4]);
 
@@ -89,5 +89,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, assert::AssertMode::FatalThrow)
+    util::simple_panic_handler::<log::LmLogger>(info, assert::AssertLevel::FatalThrow())
 }
