@@ -22,19 +22,20 @@ source = "git+https://github.com/aarch64-switch-rs/logpacket#d807c993fb4578e3809
 [[package]]
 name = "nx"
 version = "0.1.0"
-source = "git+https://github.com/aarch64-switch-rs/nx#69c1134d8dcb4dcec29370059910d30ee079f5e5"
+source = "git+https://github.com/aarch64-switch-rs/nx#4fbe027ee5a53345d6884d5b598d1fef6fbd17e7"
 dependencies = [
  "arrayvec",
  "linked_list_allocator",
  "logpacket",
  "paste",
+ "static_assertions",
 ]
 
 [[package]]
 name = "paste"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0744126afe1a6dd7f394cb50a716dbe086cb06e255e53d8d0185d82828358fb5"
+checksum = "0c520e05135d6e763148b6426a837e239041653ba7becd2e538c076c738025fc"
 
 [[package]]
 name = "server"
@@ -43,3 +44,9 @@ dependencies = [
  "nx",
  "paste",
 ]
+
+[[package]]
+name = "static_assertions"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
