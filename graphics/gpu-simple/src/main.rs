@@ -11,15 +11,13 @@ use nx::result::*;
 use nx::util;
 use nx::diag::assert;
 use nx::diag::log;
-use nx::service::vi;
-use nx::service::nv;
 use nx::gpu;
 use nx::service::hid;
 use nx::input;
 
 use core::panic;
 
-mod ui2d;
+extern crate ui2d;
 
 #[no_mangle]
 pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
@@ -49,8 +47,8 @@ impl Square {
         Self { x: x, y: y, size: size, x_incr: 1, y_incr: 1, x_mult: 1, y_mult: 1, color: color }
     }
 
-    pub fn handle_render<NS: nv::INvDrvService>(&mut self, surface: &mut ui2d::SurfaceEx<NS>) {
-        surface.draw(self.x, self.y, self.size, self.size, self.color);
+    pub fn handle_render(&mut self, surface: &mut ui2d::SurfaceEx) {
+        surface.draw(self.x, self.y, self.size, self.size, self.color, false);
 
         self.x += self.x_incr * self.x_mult;
         self.y += self.y_incr * self.y_mult;
@@ -93,7 +91,7 @@ impl Square {
 
 #[no_mangle]
 pub fn main() -> Result<()> {
-    let mut gpu_ctx: gpu::GpuContext<vi::SystemRootService, nv::AppletNvDrvService> = gpu::GpuContext::new(0x800000)?;
+    let mut gpu_ctx = gpu::Context::new(gpu::NvDrvServiceKind::Applet, gpu::ViServiceKind::System, 0x800000)?;
 
     let supported_tags = hid::NpadStyleTag::ProController() | hid::NpadStyleTag::Handheld() | hid::NpadStyleTag::JoyconPair() | hid::NpadStyleTag::JoyconLeft() | hid::NpadStyleTag::JoyconRight() | hid::NpadStyleTag::SystemExt() | hid::NpadStyleTag::System();
     let controllers = [hid::ControllerId::Player1, hid::ControllerId::Player2, hid::ControllerId::Player3, hid::ControllerId::Player4, hid::ControllerId::Player5, hid::ControllerId::Player6, hid::ControllerId::Player7, hid::ControllerId::Player8, hid::ControllerId::Handheld];
@@ -107,7 +105,7 @@ pub fn main() -> Result<()> {
     let c_royal_blue = ui2d::RGBA8::new_rgb(65, 105, 225);
 
     let font_data = include_bytes!("../../font/Roboto-Medium.ttf");
-    let font = rusttype::Font::try_from_bytes(font_data as &[u8]).unwrap();
+    let font = ui2d::Font::try_from_bytes(font_data as &[u8]).unwrap();
 
     let mut surface = ui2d::SurfaceEx::from(gpu_ctx.create_stray_layer_surface("Default", 2, color_fmt, gpu::PixelFormat::RGBA_8888, gpu::Layout::BlockLinear)?);
 
@@ -128,8 +126,8 @@ pub fn main() -> Result<()> {
         surface.start()?;
         
         surface.clear(c_white);
-        surface.draw_font_text(&font, String::from("(Drawn with Roboto TTF font)\n\nHello world from aarch64-switch-rs!\nPress A to spawn moving squares.\nPress + to exit this test."), c_black, 25.0, 10, 10);
-        surface.draw_bitmap_text(String::from("(Drawn with standard bitmap font)\n\nHello world from aarch64-switch-rs!\nPress A to spawn moving squares.\nPress + to exit this test."), c_black, 2, 10, 250);
+        surface.draw_font_text(&font, String::from("(Drawn with Roboto TTF font)\n\nHello world from aarch64-switch-rs!\nPress A to spawn moving squares.\nPress + to exit this test."), c_black, 25.0, 10, 10, true);
+        surface.draw_bitmap_text(String::from("(Drawn with standard bitmap font)\n\nHello world from aarch64-switch-rs!\nPress A to spawn moving squares.\nPress + to exit this test."), c_black, 2, 10, 250, true);
 
         for square in squares.iter_mut() {
             square.handle_render(&mut surface);

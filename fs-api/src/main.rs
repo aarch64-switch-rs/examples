@@ -29,7 +29,7 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 
 #[no_mangle]
 pub fn main() -> Result<()> {
-    fs::initialize()?;
+    fs::initialize_fspsrv_session()?;
     fs::mount_sd_card("sdmc")?;
 
     let mut hbmenu_nro = fs::open_file(String::from("sdmc:/hbmenu.nro"), fs::FileOpenOption::Read())?;
@@ -37,10 +37,11 @@ pub fn main() -> Result<()> {
     let nro_magic: u32 = hbmenu_nro.read_val()?;
 
     let nro_magic_msg = format!("hbmenu NRO magic: {:#X}", nro_magic);
-    let mut msg_log = fs::open_file(String::from("sdmc:/fs-test-log.log"), fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append())?;
-    msg_log.write(nro_magic_msg.as_ptr(), nro_magic_msg.len())?;
+    let mut log_file = fs::open_file(String::from("sdmc:/fs-test-log.log"), fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append())?;
+    log_file.write_array(nro_magic_msg.as_bytes())?;
 
-    fs::finalize();
+    fs::finalize_fspsrv_session();
+    fs::unmount_all();
     Ok(())
 }
 

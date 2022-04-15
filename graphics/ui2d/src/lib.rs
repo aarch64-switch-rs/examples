@@ -1,3 +1,7 @@
+#![no_std]
+
+// Note: quite simple lib made for UI tests to easily render stuff
+
 use nx::result::*;
 use nx::gpu;
 use nx::arm;
@@ -8,6 +12,8 @@ use alloc::vec::Vec;
 use core::ptr;
 use core::mem;
 use font8x8::UnicodeFonts;
+
+pub type Font<'a> = rusttype::Font<'a>;
 
 #[derive(Copy, Clone)]
 pub struct RGBA8 {
@@ -100,6 +106,10 @@ impl SurfaceEx {
         self.surface_ref.wait_fences(fences, -1)
     }
 
+    pub fn get_surface(&mut self) -> &mut gpu::surface::Surface {
+        &mut self.surface_ref
+    }
+
     fn convert_buffers_gob_impl(out_gob_buf: *mut u8, in_gob_buf: *mut u8, stride: u32) {
         unsafe {
             let mut tmp_out_gob_buf_128 = out_gob_buf as *mut u128;
@@ -156,12 +166,15 @@ impl SurfaceEx {
         }
     }
 
-    pub fn draw_single(&mut self, x: i32, y: i32, color: RGBA8) {
+    pub fn draw_single(&mut self, x: i32, y: i32, color: RGBA8, blend: bool) {
         unsafe {
             let offset = ((self.surface_ref.compute_stride() / mem::size_of::<u32>() as u32) as i32 * y + x) as isize;
             let cur = self.linear_buf.offset(offset);
             let old_color = RGBA8::from_abgr(*cur);
-            let new_color = color.blend_with(old_color);
+            let new_color = match blend {
+                true => color.blend_with(old_color),
+                false => color,
+            };
             *cur = new_color.encode_abgr();
         }
     }
@@ -188,7 +201,7 @@ impl SurfaceEx {
         self.surface_ref.get_color_format()
     }
 
-    pub fn draw(&mut self, x: i32, y: i32, width: i32, height: i32, color: RGBA8) {
+    pub fn draw(&mut self, x: i32, y: i32, width: i32, height: i32, color: RGBA8, blend: bool) {
         let s_width = self.surface_ref.get_width() as i32;
         let s_height = self.surface_ref.get_height() as i32;
         let x0 = Self::clamp(s_width, x);
@@ -197,12 +210,12 @@ impl SurfaceEx {
         let y1 = Self::clamp(s_height, y + height);
         for y in y0..y1 {
             for x in x0..x1 {
-                self.draw_single(x, y, color);
+                self.draw_single(x, y, color, blend);
             }
         }
     }
 
-    fn draw_font_text_impl(&mut self, font: &rusttype::Font, text: &str, color: RGBA8, scale: rusttype::Scale, v_metrics: rusttype::VMetrics, x: i32, y: i32) {
+    fn draw_font_text_impl(&mut self, font: &rusttype::Font, text: &str, color: RGBA8, scale: rusttype::Scale, v_metrics: rusttype::VMetrics, x: i32, y: i32, blend: bool) {
         let glyphs: Vec<_> = font.layout(&text[..], scale, rusttype::point(0.0, v_metrics.ascent)).collect();
         for glyph in &glyphs {
             if let Some(bounding_box) = glyph.pixel_bounding_box() {
@@ -211,24 +224,24 @@ impl SurfaceEx {
                     let mut pix_color = color;
                     // Different alpha depending on the pixel
                     pix_color.a = (g_v * 255.0) as u8;
-                    self.draw_single(x + g_x as i32 + bounding_box.min.x as i32, y + g_y as i32 + bounding_box.min.y as i32, pix_color);
+                    self.draw_single(x + g_x as i32 + bounding_box.min.x as i32, y + g_y as i32 + bounding_box.min.y as i32, pix_color, blend);
                 });
             }
         }
     }
     
-    pub fn draw_font_text(&mut self, font: &rusttype::Font, text: String, color: RGBA8, size: f32, x: i32, y: i32) {
+    pub fn draw_font_text(&mut self, font: &rusttype::Font, text: String, color: RGBA8, size: f32, x: i32, y: i32, blend: bool) {
         let scale = rusttype::Scale::uniform(size);
         let v_metrics = font.v_metrics(scale);
         
         let mut tmp_y = y;
         for semi_text in text.lines() {
-            self.draw_font_text_impl(font, semi_text, color, scale, v_metrics, x, tmp_y);
+            self.draw_font_text_impl(font, semi_text, color, scale, v_metrics, x, tmp_y, blend);
             tmp_y += v_metrics.ascent as i32;
         }
     }
 
-    pub fn draw_bitmap_text(&mut self, text: String, color: RGBA8, scale: i32, x: i32, y: i32) {
+    pub fn draw_bitmap_text(&mut self, text: String, color: RGBA8, scale: i32, x: i32, y: i32, blend: bool) {
         let mut tmp_x = x;
         let mut tmp_y = y;
         for c in text.chars() {
@@ -246,7 +259,7 @@ impl SurfaceEx {
                                 match *gx & 1 << bit {
                                     0 => {},
                                     _ => {
-                                        self.draw(tmp_x, tmp_y, scale, scale, color);
+                                        self.draw(tmp_x, tmp_y, scale, scale, color, blend);
                                     },
                                 }
                                 tmp_x += scale;

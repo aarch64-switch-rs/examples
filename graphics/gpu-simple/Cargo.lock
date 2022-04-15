@@ -27,10 +27,8 @@ checksum = "e63201c624b8c8883921b1a1accc8916c4fa9dbfb15d122b26e4dde945b86bbf"
 name = "gpu-simple"
 version = "0.1.0"
 dependencies = [
- "font8x8",
- "libm",
  "nx",
- "rusttype",
+ "ui2d",
 ]
 
 [[package]]
@@ -53,7 +51,7 @@ source = "git+https://github.com/aarch64-switch-rs/logpacket#d807c993fb4578e3809
 [[package]]
 name = "nx"
 version = "0.1.0"
-source = "git+https://github.com/aarch64-switch-rs/nx#4fbe027ee5a53345d6884d5b598d1fef6fbd17e7"
+source = "git+https://github.com/aarch64-switch-rs/nx#7a3479c7e6519211f77b975d975d9a1abef0389e"
 dependencies = [
  "arrayvec",
  "linked_list_allocator",
@@ -99,3 +97,13 @@ name = "ttf-parser"
 version = "0.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e5d7cd7ab3e47dda6e56542f4bbf3824c15234958c6e1bd6aaa347e93499fdc"
+
+[[package]]
+name = "ui2d"
+version = "0.1.0"
+dependencies = [
+ "font8x8",
+ "libm",
+ "nx",
+ "rusttype",
+]

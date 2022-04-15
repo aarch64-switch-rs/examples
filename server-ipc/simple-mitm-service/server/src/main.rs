@@ -16,11 +16,16 @@ use nx::diag::log;
 use nx::service::sm;
 use nx::ipc::sf;
 use nx::ipc::server;
+use nx::version;
 
 use core::panic;
 
-pub trait IPsmServer {
-    ipc_cmif_interface_define_command!(get_battery_charge_percentage: () => (out_value: u32));
+// Same interface as /client project
+
+ipc_sf_define_interface_trait! {
+    trait IPsmServer {
+        get_battery_charge_percentage [0, version::VersionInterval::all()]: () => (percentage: u32);
+    }
 }
 
 pub struct PsmServer {
@@ -32,17 +37,13 @@ impl sf::IObject for PsmServer {
         &mut self.session
     }
     
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(get_battery_charge_percentage: 0)
-        ]
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl IPsmServer for PsmServer {
     fn get_battery_charge_percentage(&mut self) -> Result<u32> {
         let stub: u32 = 69;
-        diag_log!(log::LmLogger { log::LogSeverity::Trace, true } => "Returning stubbed battery percentage as {}%...\n", stub);
+        diag_log!(log::LmLogger { log::LogSeverity::Trace, true } => "Returning fake/stubbed battery percentage as {}%...\n", stub);
         Ok(stub)
     }
 }
@@ -54,8 +55,8 @@ impl server::IMitmServerObject for PsmServer {
 }
 
 impl server::IMitmService for PsmServer {
-    fn get_name() -> &'static str {
-        nul!("psm")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("psm")
     }
 
     fn should_mitm(_info: sm::MitmProcessInfo) -> bool {

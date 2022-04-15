@@ -15,11 +15,17 @@ use nx::diag::assert;
 use nx::diag::log;
 use nx::ipc::sf;
 use nx::ipc::server;
+use nx::service::sm;
+use nx::version;
 
 use core::panic;
 
-pub trait IDemoService {
-    ipc_cmif_interface_define_command!(test_buf: (buf: sf::OutPointerBuffer) => ());
+// Same interface as /client project
+
+ipc_sf_define_interface_trait! {
+    trait IDemoService {
+        sample_command [123, version::VersionInterval::all()]: (u32s_buf: sf::OutPointerBuffer<u32>) => ();
+    }
 }
 
 pub struct DemoService {
@@ -27,15 +33,15 @@ pub struct DemoService {
 }
 
 impl IDemoService for DemoService {
-    fn test_buf(&mut self, buf: sf::OutPointerBuffer) -> Result<()> {
-        diag_log!(log::LmLogger { log::LogSeverity::Trace, true } => "Buffer: {:p}, size: {}", buf.buf, buf.size);
-        if (buf.size > 0) && !buf.buf.is_null() {
-            let buf32 = buf.buf as *mut u32;
-            let len = buf.size / core::mem::size_of::<u32>();
-            for i in 0..len {
-                diag_log!(log::LmLogger { log::LogSeverity::Trace, true } => "Setting {}...", i);
-                unsafe { *buf32.offset(i as isize) = i as u32 };
-            }
+    fn sample_command(&mut self, u32s_buf: sf::OutPointerBuffer<u32>) -> Result<()> {
+        diag_log!(log::LmLogger { log::LogSeverity::Trace, true } => "List count: {}", u32s_buf.get_count());
+
+        let u32s = u32s_buf.get_mut_slice();
+        for u32_val in u32s {
+            // For each u32 we got sent, replace it as <orig-val> * 3
+            let orig_val = *u32_val;
+            *u32_val = orig_val * 3;
+            diag_log!(log::LmLogger { log::LogSeverity::Trace, true } => "Updating {} -> {}...", orig_val, *u32_val);
         }
         
         Ok(())
@@ -47,11 +53,7 @@ impl sf::IObject for DemoService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(test_buf: 1)
-        ]
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl server::IServerObject for DemoService {
@@ -61,8 +63,8 @@ impl server::IServerObject for DemoService {
 }
 
 impl server::IService for DemoService {
-    fn get_name() -> &'static str {
-        nul!("dmo-srv")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("dmo-srv")
     }
 
     fn get_max_sesssions() -> i32 {
@@ -71,7 +73,8 @@ impl server::IService for DemoService {
 }
 
 // We're using 128KB of heap
-static mut STACK_HEAP: [u8; 0x20000] = [0; 0x20000];
+const STACK_HEAP_LEN: usize = 0x20000;
+static mut STACK_HEAP: [u8; STACK_HEAP_LEN] = [0; STACK_HEAP_LEN];
 
 #[no_mangle]
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {

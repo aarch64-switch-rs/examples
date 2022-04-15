@@ -1,31 +1,26 @@
 #![no_std]
 #![no_main]
 
-#[macro_use]
 extern crate alloc;
-use alloc::vec::Vec;
 use alloc::string::String;
 
-#[macro_use]
 extern crate nx;
-use nx::svc;
 use nx::result::*;
-use nx::results;
 use nx::util;
 use nx::diag::assert;
 use nx::diag::log;
-use nx::service::vi;
-use nx::service::nv;
 use nx::gpu;
+use nx::service::vi;
 use nx::service::hid;
 use nx::input;
 
 use core::panic;
 
-mod ui2d;
+extern crate ui2d;
 
 // We're using 8MB of heap
-static mut STACK_HEAP: [u8; 0x800000] = [0; 0x800000];
+const STACK_HEAP_LEN: usize = 0x800000;
+static mut STACK_HEAP: [u8; STACK_HEAP_LEN] = [0; STACK_HEAP_LEN];
 
 #[no_mangle]
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
@@ -34,7 +29,8 @@ pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize 
     }
 }
 
-fn draw_circle(surface: &mut ui2d::SurfaceEx::<nv::AppletNvDrvService>, x: i32, y: i32, radius: u32, color: ui2d::RGBA8, blend: bool) {
+/*
+fn draw_circle(surface: &mut ui2d::SurfaceEx, x: i32, y: i32, radius: u32, color: ui2d::RGBA8, blend: bool) {
     let pi: f64 = 3.1415926535;
     let mut i: f64 = 0.0;
     while i < 360.0 {
@@ -44,10 +40,11 @@ fn draw_circle(surface: &mut ui2d::SurfaceEx::<nv::AppletNvDrvService>, x: i32, 
         i += 0.1;
     }
 }
+*/
 
 #[no_mangle]
 pub fn main() -> Result<()> {
-    let mut gpu_ctx: gpu::GpuContext<vi::ManagerRootService, nv::AppletNvDrvService> = gpu::GpuContext::new(0x40000)?;
+    let mut gpu_ctx = gpu::Context::new(gpu::NvDrvServiceKind::Applet, gpu::ViServiceKind::Manager, 0x40000)?;
 
     let supported_tags = hid::NpadStyleTag::ProController() | hid::NpadStyleTag::Handheld() | hid::NpadStyleTag::JoyconPair() | hid::NpadStyleTag::JoyconLeft() | hid::NpadStyleTag::JoyconRight() | hid::NpadStyleTag::SystemExt() | hid::NpadStyleTag::System();
     let controllers = [hid::ControllerId::Player1, hid::ControllerId::Player2, hid::ControllerId::Player3, hid::ControllerId::Player4, hid::ControllerId::Player5, hid::ControllerId::Player6, hid::ControllerId::Player7, hid::ControllerId::Player8, hid::ControllerId::Handheld];
@@ -65,7 +62,7 @@ pub fn main() -> Result<()> {
     let c_royal_blue = ui2d::RGBA8::new_rgb(65, 105, 225);
 
     let font_data = include_bytes!("../../font/Roboto-Medium.ttf");
-    let font = rusttype::Font::try_from_bytes(font_data as &[u8]).unwrap();
+    let font = ui2d::Font::try_from_bytes(font_data as &[u8]).unwrap();
 
     let mut layer_visible = true;
     let mut surface = ui2d::SurfaceEx::from(gpu_ctx.create_managed_layer_surface("Default", 0, vi::LayerFlags::None(), x, y, width, height, gpu::LayerZ::Max, 2, color_fmt, gpu::PixelFormat::RGBA_8888, gpu::Layout::BlockLinear)?);

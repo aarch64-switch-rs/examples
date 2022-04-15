@@ -67,7 +67,7 @@ pub fn main() -> Result<()> {
         let storage = lib_applet_creator.get().create_storage(common_args.size as usize)?.to::<applet::Storage>();
         {
             let storage_accessor = storage.get().open()?.to::<applet::StorageAccessor>();
-            storage_accessor.get().write(0, sf::Buffer::from_var(&common_args))?;
+            storage_accessor.get().write(0, sf::Buffer::from_other_var(&common_args))?;
         }
         lib_applet_accessor.get().push_in_data(storage)?;
     }
@@ -78,7 +78,7 @@ pub fn main() -> Result<()> {
         let storage = lib_applet_creator.get().create_storage(data.len())?.to::<applet::Storage>();
         {
             let storage_accessor = storage.get().open()?.to::<applet::StorageAccessor>();
-            storage_accessor.get().write(0, sf::Buffer::from_const(data.as_ptr(), data.len()))?;
+            storage_accessor.get().write(0, sf::Buffer::from_array(&data))?;
         }
         lib_applet_accessor.get().push_in_data(storage)?;
     }

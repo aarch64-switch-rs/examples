@@ -14,11 +14,17 @@ use nx::diag::assert;
 use nx::diag::log;
 use nx::ipc::sf;
 use nx::service;
+use nx::service::sm;
+use nx::version;
 
 use core::panic;
 
-pub trait IDemoService {
-    ipc_cmif_interface_define_command!(test_buf: (buf: sf::OutPointerBuffer) => ());
+// Same interface as /server project
+
+ipc_sf_define_interface_trait! {
+    trait IDemoService {
+        sample_command [123, version::VersionInterval::all()]: (u32s_buf: sf::OutPointerBuffer<u32>) => ();
+    }
 }
 
 pub struct DemoService {
@@ -30,11 +36,7 @@ impl sf::IObject for DemoService {
         &mut self.session
     }
 
-    fn get_command_table(&self) -> sf::CommandMetadataTable {
-        vec! [
-            ipc_cmif_interface_make_command_meta!(test_buf: 1)
-        ]
-    }
+    ipc_sf_object_impl_default_command_metadata!();
 }
 
 impl service::IClientObject for DemoService {
@@ -44,14 +46,14 @@ impl service::IClientObject for DemoService {
 }
 
 impl IDemoService for DemoService {
-    fn test_buf(&mut self, buf: sf::OutPointerBuffer) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 1] (buf) => ())
+    fn sample_command(&mut self, u32s_buf: sf::OutPointerBuffer<u32>) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 123] (u32s_buf) => ())
     }
 }
 
 impl service::IService for DemoService {
-    fn get_name() -> &'static str {
-        nul!("dmo-srv")
+    fn get_name() -> sm::ServiceName {
+        sm::ServiceName::new("dmo-srv")
     }
 
     fn as_domain() -> bool {
@@ -79,10 +81,10 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 pub fn main() -> Result<()> {
     let demo_srv = service::new_service_object::<DemoService>()?;
 
-    let mut data: [u32; 5] = [0; 5];
-    demo_srv.get().test_buf(sf::Buffer::from_mut(data.as_mut_ptr(), data.len() * core::mem::size_of::<u32>()))?;
+    let mut u32s: [u32; 5] = [0; 5];
+    demo_srv.get().sample_command(sf::Buffer::from_mut_array(&mut u32s))?;
 
-    diag_log!(log::LmLogger { log::LogSeverity::Trace, false } => "Got: {} {} {} {} {}", data[0], data[1], data[2], data[3], data[4]);
+    diag_log!(log::LmLogger { log::LogSeverity::Trace, false } => "u32 list after sample_command: {} {} {} {} {}", u32s[0], u32s[1], u32s[2], u32s[3], u32s[4]);
 
     Ok(())
 }
