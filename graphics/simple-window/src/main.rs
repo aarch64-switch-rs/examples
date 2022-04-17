@@ -19,13 +19,13 @@ use core::panic;
 extern crate ui2d;
 
 // We're using 8MB of heap
-const STACK_HEAP_LEN: usize = 0x800000;
-static mut STACK_HEAP: [u8; STACK_HEAP_LEN] = [0; STACK_HEAP_LEN];
+const FAKE_HEAP_LEN: usize = 0x800000;
+static mut FAKE_HEAP: [u8; FAKE_HEAP_LEN] = [0; FAKE_HEAP_LEN];
 
 #[no_mangle]
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     unsafe {
-        util::PointerAndSize::new(STACK_HEAP.as_mut_ptr(), STACK_HEAP.len())
+        util::PointerAndSize::new(FAKE_HEAP.as_mut_ptr(), FAKE_HEAP.len())
     }
 }
 

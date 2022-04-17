@@ -28,9 +28,7 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-pub struct DemoService {
-    session: sf::Session
-}
+pub struct DemoService {}
 
 impl IDemoService for DemoService {
     fn sample_command(&mut self, u32s_buf: sf::OutPointerBuffer<u32>) -> Result<()> {
@@ -49,16 +47,14 @@ impl IDemoService for DemoService {
 }
 
 impl sf::IObject for DemoService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
+impl server::ISessionObject for DemoService {}
+
 impl server::IServerObject for DemoService {
     fn new() -> Self {
-        Self { session: sf::Session::new() }
+        Self {}
     }
 }
 
@@ -73,13 +69,13 @@ impl server::IService for DemoService {
 }
 
 // We're using 128KB of heap
-const STACK_HEAP_LEN: usize = 0x20000;
-static mut STACK_HEAP: [u8; STACK_HEAP_LEN] = [0; STACK_HEAP_LEN];
+const FAKE_HEAP_LEN: usize = 0x20000;
+static mut FAKE_HEAP: [u8; FAKE_HEAP_LEN] = [0; FAKE_HEAP_LEN];
 
 #[no_mangle]
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     unsafe {
-        util::PointerAndSize::new(STACK_HEAP.as_mut_ptr(), STACK_HEAP.len())
+        util::PointerAndSize::new(FAKE_HEAP.as_mut_ptr(), FAKE_HEAP.len())
     }
 }
 

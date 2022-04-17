@@ -13,6 +13,7 @@ use nx::util;
 use nx::diag::assert;
 use nx::diag::log;
 use nx::ipc::sf;
+use nx::ipc::client;
 use nx::service;
 use nx::service::sm;
 use nx::version;
@@ -32,16 +33,16 @@ pub struct DemoService {
 }
 
 impl sf::IObject for DemoService {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-
     ipc_sf_object_impl_default_command_metadata!();
 }
 
-impl service::IClientObject for DemoService {
+impl client::IClientObject for DemoService {
     fn new(session: sf::Session) -> Self {
         Self { session: session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 

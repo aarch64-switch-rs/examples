@@ -28,15 +28,9 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-pub struct PsmServer {
-    session: sf::Session
-}
+pub struct PsmServer {}
 
 impl sf::IObject for PsmServer {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-    
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -48,9 +42,11 @@ impl IPsmServer for PsmServer {
     }
 }
 
+impl server::ISessionObject for PsmServer {}
+
 impl server::IMitmServerObject for PsmServer {
-    fn new(_info: sm::MitmProcessInfo) -> Self {
-        Self { session: sf::Session::new() }
+    fn new(_info: sm::mitm::MitmProcessInfo) -> Self {
+        Self {}
     }
 }
 
@@ -59,18 +55,18 @@ impl server::IMitmService for PsmServer {
         sm::ServiceName::new("psm")
     }
 
-    fn should_mitm(_info: sm::MitmProcessInfo) -> bool {
+    fn should_mitm(_info: sm::mitm::MitmProcessInfo) -> bool {
         true
     }
 }
 
-pub const STACK_HEAP_SIZE: usize = 0x4000;
-static mut STACK_HEAP: [u8; STACK_HEAP_SIZE] = [0; STACK_HEAP_SIZE];
+pub const FAKE_HEAP_SIZE: usize = 0x4000;
+static mut FAKE_HEAP: [u8; FAKE_HEAP_SIZE] = [0; FAKE_HEAP_SIZE];
 
 #[no_mangle]
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     unsafe {
-        util::PointerAndSize::new(STACK_HEAP.as_mut_ptr(), STACK_HEAP.len())
+        util::PointerAndSize::new(FAKE_HEAP.as_mut_ptr(), FAKE_HEAP.len())
     }
 }
 

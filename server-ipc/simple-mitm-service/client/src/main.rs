@@ -14,6 +14,7 @@ use nx::diag::assert;
 use nx::diag::log;
 use nx::service;
 use nx::ipc::sf;
+use nx::ipc::client;
 use nx::service::sm;
 use nx::version;
 
@@ -32,10 +33,6 @@ pub struct PsmServer {
 }
 
 impl sf::IObject for PsmServer {
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-    
     ipc_sf_object_impl_default_command_metadata!();
 }
 
@@ -45,9 +42,13 @@ impl IPsmServer for PsmServer {
     }
 }
 
-impl service::IClientObject for PsmServer {
+impl client::IClientObject for PsmServer {
     fn new(session: sf::Session) -> Self {
         Self { session: session }
+    }
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
     }
 }
 
