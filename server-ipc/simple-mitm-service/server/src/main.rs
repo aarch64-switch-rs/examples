@@ -60,13 +60,13 @@ impl server::IMitmService for PsmServer {
     }
 }
 
-pub const FAKE_HEAP_SIZE: usize = 0x4000;
-static mut FAKE_HEAP: [u8; FAKE_HEAP_SIZE] = [0; FAKE_HEAP_SIZE];
+pub const CUSTOM_HEAP_SIZE: usize = 0x4000;
+static mut CUSTOM_HEAP: [u8; CUSTOM_HEAP_SIZE] = [0; CUSTOM_HEAP_SIZE];
 
 #[no_mangle]
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     unsafe {
-        util::PointerAndSize::new(FAKE_HEAP.as_mut_ptr(), FAKE_HEAP.len())
+        util::PointerAndSize::new(CUSTOM_HEAP.as_mut_ptr(), CUSTOM_HEAP.len())
     }
 }
 

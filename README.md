@@ -24,6 +24,10 @@ Homebrew examples of Nintendo Switch homebrew written with this organization's t
 
 - `server-ipc`:
 
+  - `lm`: simple replacement of `LogManager` sysmodule
+
+  - `prepo-mitm`: simple MitM of `prepo` (Play Report) services
+
   - `simple-mitm-service`: example of how a IPC service MitM works
 
     - `client`: client-side example

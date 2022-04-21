@@ -69,13 +69,13 @@ impl server::IService for DemoService {
 }
 
 // We're using 128KB of heap
-const FAKE_HEAP_LEN: usize = 0x20000;
-static mut FAKE_HEAP: [u8; FAKE_HEAP_LEN] = [0; FAKE_HEAP_LEN];
+const CUSTOM_HEAP_LEN: usize = 0x20000;
+static mut CUSTOM_HEAP: [u8; CUSTOM_HEAP_LEN] = [0; CUSTOM_HEAP_LEN];
 
 #[no_mangle]
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     unsafe {
-        util::PointerAndSize::new(FAKE_HEAP.as_mut_ptr(), FAKE_HEAP.len())
+        util::PointerAndSize::new(CUSTOM_HEAP.as_mut_ptr(), CUSTOM_HEAP.len())
     }
 }
 
