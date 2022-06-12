@@ -7,7 +7,7 @@ use alloc::string::String;
 extern crate nx;
 use nx::result::*;
 use nx::util;
-use nx::diag::assert;
+use nx::diag::abort;
 use nx::diag::log;
 use nx::gpu;
 use nx::service::vi;
@@ -46,9 +46,9 @@ fn draw_circle(surface: &mut ui2d::SurfaceEx, x: i32, y: i32, radius: u32, color
 pub fn main() -> Result<()> {
     let mut gpu_ctx = gpu::Context::new(gpu::NvDrvServiceKind::Applet, gpu::ViServiceKind::Manager, 0x40000)?;
 
-    let supported_tags = hid::NpadStyleTag::ProController() | hid::NpadStyleTag::Handheld() | hid::NpadStyleTag::JoyconPair() | hid::NpadStyleTag::JoyconLeft() | hid::NpadStyleTag::JoyconRight() | hid::NpadStyleTag::SystemExt() | hid::NpadStyleTag::System();
-    let controllers = [hid::ControllerId::Player1, hid::ControllerId::Player2, hid::ControllerId::Player3, hid::ControllerId::Player4, hid::ControllerId::Player5, hid::ControllerId::Player6, hid::ControllerId::Player7, hid::ControllerId::Player8, hid::ControllerId::Handheld];
-    let mut input_ctx = input::InputContext::new(0, supported_tags, &controllers)?;
+    let supported_tags = hid::NpadStyleTag::Handheld();
+    let supported_npad_ids = [hid::NpadIdType::Handheld];
+    let mut input_ctx = input::Context::new(supported_tags, &supported_npad_ids)?;
 
     let width: u32 = 500;
     let height: u32 = 500;
@@ -68,17 +68,15 @@ pub fn main() -> Result<()> {
     let mut surface = ui2d::SurfaceEx::from(gpu_ctx.create_managed_layer_surface("Default", 0, vi::LayerFlags::None(), x, y, width, height, gpu::LayerZ::Max, 2, color_fmt, gpu::PixelFormat::RGBA_8888, gpu::Layout::BlockLinear)?);
 
     loop {
-        let mut input_player = match input_ctx.is_controller_connected(hid::ControllerId::Player1) {
-            true => input_ctx.get_player(hid::ControllerId::Player1),
-            false => input_ctx.get_player(hid::ControllerId::Handheld)
-        }?;
-        let input_keys = input_player.get_button_state_down();
-        if input_keys.contains(input::Key::Plus()) {
+        let mut p_handheld = input_ctx.get_player(hid::NpadIdType::Handheld);
+
+        let buttons_down = p_handheld.get_buttons_down();
+        if buttons_down.contains(hid::NpadButton::X()) {
+            layer_visible = !layer_visible;
+        }
+        else if buttons_down.contains(hid::NpadButton::Plus()) {
             // Exit if Plus/+ is pressed.
             break;
-        }
-        else if input_keys.contains(input::Key::X()) {
-            layer_visible = !layer_visible;
         }
         
         surface.start()?;
@@ -98,5 +96,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, assert::AssertLevel::FatalThrow())
+    util::simple_panic_handler::<log::LmLogger>(info, abort::AbortLevel::FatalThrow())
 }

@@ -13,7 +13,7 @@ use nx::result::*;
 use nx::util;
 use nx::fs;
 use nx::thread;
-use nx::diag::assert;
+use nx::diag::abort;
 use nx::diag::log;
 use nx::ipc::server;
 use nx::version;
@@ -70,5 +70,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, assert::AssertLevel::SvcBreak())
+    util::simple_panic_handler::<log::LmLogger>(info, abort::AbortLevel::SvcBreak())
 }

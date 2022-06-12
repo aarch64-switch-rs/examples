@@ -9,7 +9,7 @@ extern crate nx;
 use nx::svc;
 use nx::result::*;
 use nx::util;
-use nx::diag::assert;
+use nx::diag::abort;
 use nx::diag::log;
 use nx::gpu;
 use nx::service::hid;
@@ -93,9 +93,9 @@ impl Square {
 pub fn main() -> Result<()> {
     let mut gpu_ctx = gpu::Context::new(gpu::NvDrvServiceKind::Applet, gpu::ViServiceKind::System, 0x800000)?;
 
-    let supported_tags = hid::NpadStyleTag::ProController() | hid::NpadStyleTag::Handheld() | hid::NpadStyleTag::JoyconPair() | hid::NpadStyleTag::JoyconLeft() | hid::NpadStyleTag::JoyconRight() | hid::NpadStyleTag::SystemExt() | hid::NpadStyleTag::System();
-    let controllers = [hid::ControllerId::Player1, hid::ControllerId::Player2, hid::ControllerId::Player3, hid::ControllerId::Player4, hid::ControllerId::Player5, hid::ControllerId::Player6, hid::ControllerId::Player7, hid::ControllerId::Player8, hid::ControllerId::Handheld];
-    let mut input_ctx = input::InputContext::new(0, supported_tags, &controllers)?;
+    let supported_style_tags = hid::NpadStyleTag::Handheld();
+    let supported_npad_ids = [hid::NpadIdType::Handheld];
+    let input_ctx = input::Context::new(supported_style_tags, &supported_npad_ids)?;
 
     let color_fmt = gpu::ColorFormat::A8B8G8R8;
     let mut squares: Vec<Square> = Vec::new();
@@ -110,15 +110,13 @@ pub fn main() -> Result<()> {
     let mut surface = ui2d::SurfaceEx::from(gpu_ctx.create_stray_layer_surface("Default", 2, color_fmt, gpu::PixelFormat::RGBA_8888, gpu::Layout::BlockLinear)?);
 
     loop {
-        let mut input_player = match input_ctx.is_controller_connected(hid::ControllerId::Player1) {
-            true => input_ctx.get_player(hid::ControllerId::Player1),
-            false => input_ctx.get_player(hid::ControllerId::Handheld)
-        }?;
-        let input_keys = input_player.get_button_state_down();
-        if input_keys.contains(input::Key::A()) {
+        let mut p_handheld = input_ctx.get_player(hid::NpadIdType::Handheld);
+
+        let buttons_down = p_handheld.get_buttons_down();
+        if buttons_down.contains(hid::NpadButton::A()) {
             squares.push(Square::new(10, 10, 50, c_royal_blue));
         }
-        else if input_keys.contains(input::Key::Plus()) {
+        else if buttons_down.contains(hid::NpadButton::Plus()) {
             // Exit if Plus/+ is pressed.
             break;
         }
@@ -141,5 +139,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, assert::AssertLevel::FatalThrow())
+    util::simple_panic_handler::<log::LmLogger>(info, abort::AbortLevel::FatalThrow())
 }

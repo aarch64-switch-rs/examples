@@ -13,7 +13,7 @@ use nx::result::*;
 use nx::util;
 use nx::wait;
 use nx::thread;
-use nx::diag::assert;
+use nx::diag::abort;
 use nx::ipc::sf;
 use nx::ipc::server;
 use nx::service;
@@ -89,5 +89,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<logger::SelfLogger>(info, assert::AssertLevel::SvcBreak())
+    util::simple_panic_handler::<logger::SelfLogger>(info, abort::AbortLevel::SvcBreak())
 }

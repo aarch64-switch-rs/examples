@@ -18,6 +18,8 @@ Homebrew examples of Nintendo Switch homebrew written with this organization's t
 
   - `ui2d`: simple UI libraries used by the examples above:
 
+- `input`: example of input API
+
 - `os`:
 
   - `threads`: example of thread support
