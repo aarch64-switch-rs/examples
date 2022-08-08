@@ -11,7 +11,7 @@ use nx::svc;
 use nx::input;
 use nx::service::hid;
 use nx::diag::abort;
-use nx::diag::log;
+use nx::diag::log::lm::LmLogger;
 
 use core::panic;
 
@@ -60,5 +60,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, abort::AbortLevel::FatalThrow())
+    util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::FatalThrow())
 }

@@ -10,16 +10,11 @@ use nx::result::*;
 use nx::util;
 use nx::wait;
 use nx::diag::abort;
-use nx::diag::log;
+use nx::diag::log::lm::LmLogger;
 use nx::ipc::sf;
 use nx::service;
 use nx::service::applet;
 use nx::service::applet::IAllSystemAppletProxiesService;
-use nx::service::applet::ILibraryAppletProxy;
-use nx::service::applet::ILibraryAppletCreator;
-use nx::service::applet::ILibraryAppletAccessor;
-use nx::service::applet::IStorage;
-use nx::service::applet::IStorageAccessor;
 
 use core::panic;
 
@@ -58,15 +53,15 @@ pub fn main() -> Result<()> {
     let applet_proxy_srv = service::new_service_object::<applet::AllSystemAppletProxiesService>()?;
     
     let attr: applet::AppletAttribute = unsafe { core::mem::zeroed() };
-    let lib_applet_proxy = applet_proxy_srv.get().open_library_applet_proxy(sf::ProcessId::new(), sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Buffer::from_var(&attr))?.to::<applet::LibraryAppletProxy>();
-    let lib_applet_creator = lib_applet_proxy.get().get_library_applet_creator()?.to::<applet::LibraryAppletCreator>();
-    let lib_applet_accessor = lib_applet_creator.get().create_library_applet(applet::AppletId::LibraryAppletPlayerSelect, applet::LibraryAppletMode::AllForeground)?.to::<applet::LibraryAppletAccessor>();
+    let lib_applet_proxy = applet_proxy_srv.get().open_library_applet_proxy(sf::ProcessId::new(), sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Buffer::from_var(&attr))?;
+    let lib_applet_creator = lib_applet_proxy.get().get_library_applet_creator()?;
+    let lib_applet_accessor = lib_applet_creator.get().create_library_applet(applet::AppletId::LibraryAppletPlayerSelect, applet::LibraryAppletMode::AllForeground)?;
 
     {
         let common_args = CommonArguments::new(1, 0x20000, 0, false);
-        let storage = lib_applet_creator.get().create_storage(common_args.size as usize)?.to::<applet::Storage>();
+        let storage = lib_applet_creator.get().create_storage(common_args.size as usize)?;
         {
-            let storage_accessor = storage.get().open()?.to::<applet::StorageAccessor>();
+            let storage_accessor = storage.get().open()?;
             storage_accessor.get().write(0, sf::Buffer::from_other_var(&common_args))?;
         }
         lib_applet_accessor.get().push_in_data(storage)?;
@@ -75,9 +70,9 @@ pub fn main() -> Result<()> {
     {
         let mut data: [u8; 0xA0] = [0; 0xA0];
         data[0x96] = 1;
-        let storage = lib_applet_creator.get().create_storage(data.len())?.to::<applet::Storage>();
+        let storage = lib_applet_creator.get().create_storage(data.len())?;
         {
-            let storage_accessor = storage.get().open()?.to::<applet::StorageAccessor>();
+            let storage_accessor = storage.get().open()?;
             storage_accessor.get().write(0, sf::Buffer::from_array(&data))?;
         }
         lib_applet_accessor.get().push_in_data(storage)?;
@@ -95,5 +90,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, abort::AbortLevel::FatalThrow())
+    util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::FatalThrow())
 }

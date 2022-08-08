@@ -12,7 +12,7 @@ extern crate paste;
 use nx::result::*;
 use nx::util;
 use nx::diag::abort;
-use nx::diag::log;
+use nx::diag::log::{lm::LmLogger, LogSeverity};
 use nx::service::sm;
 use nx::ipc::sf;
 use nx::ipc::server;
@@ -28,16 +28,22 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-pub struct PsmServer {}
+pub struct PsmServer {
+    dummy_session: sf::Session
+}
 
 impl sf::IObject for PsmServer {
     ipc_sf_object_impl_default_command_metadata!();
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.dummy_session
+    }
 }
 
 impl IPsmServer for PsmServer {
     fn get_battery_charge_percentage(&mut self) -> Result<u32> {
         let stub: u32 = 69;
-        diag_log!(log::LmLogger { log::LogSeverity::Trace, true } => "Returning fake/stubbed battery percentage as {}%...\n", stub);
+        diag_log!(LmLogger { LogSeverity::Trace, true } => "Returning fake/stubbed battery percentage as {}%...\n", stub);
         Ok(stub)
     }
 }
@@ -46,7 +52,9 @@ impl server::ISessionObject for PsmServer {}
 
 impl server::IMitmServerObject for PsmServer {
     fn new(_info: sm::mitm::MitmProcessInfo) -> Self {
-        Self {}
+        Self {
+            dummy_session: sf::Session::new()
+        }
     }
 }
 
@@ -84,5 +92,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, abort::AbortLevel::FatalThrow())
+    util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::FatalThrow())
 }

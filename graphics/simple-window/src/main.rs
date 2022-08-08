@@ -8,7 +8,7 @@ extern crate nx;
 use nx::result::*;
 use nx::util;
 use nx::diag::abort;
-use nx::diag::log;
+use nx::diag::log::lm::LmLogger;
 use nx::gpu;
 use nx::service::vi;
 use nx::service::hid;
@@ -47,8 +47,8 @@ pub fn main() -> Result<()> {
     let mut gpu_ctx = gpu::Context::new(gpu::NvDrvServiceKind::Applet, gpu::ViServiceKind::Manager, 0x40000)?;
 
     let supported_tags = hid::NpadStyleTag::Handheld();
-    let supported_npad_ids = [hid::NpadIdType::Handheld];
-    let mut input_ctx = input::Context::new(supported_tags, &supported_npad_ids)?;
+    let supported_npad_id = hid::NpadIdType::Handheld;
+    let input_ctx = input::Context::new(supported_tags, &[supported_npad_id])?;
 
     let width: u32 = 500;
     let height: u32 = 500;
@@ -68,14 +68,14 @@ pub fn main() -> Result<()> {
     let mut surface = ui2d::SurfaceEx::from(gpu_ctx.create_managed_layer_surface("Default", 0, vi::LayerFlags::None(), x, y, width, height, gpu::LayerZ::Max, 2, color_fmt, gpu::PixelFormat::RGBA_8888, gpu::Layout::BlockLinear)?);
 
     loop {
-        let mut p_handheld = input_ctx.get_player(hid::NpadIdType::Handheld);
+        let mut p_handheld = input_ctx.get_player(supported_npad_id);
 
         let buttons_down = p_handheld.get_buttons_down();
         if buttons_down.contains(hid::NpadButton::X()) {
             layer_visible = !layer_visible;
         }
         else if buttons_down.contains(hid::NpadButton::Plus()) {
-            // Exit if Plus/+ is pressed.
+            // Exit if Plus/+ is pressed
             break;
         }
         
@@ -96,5 +96,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, abort::AbortLevel::FatalThrow())
+    util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::FatalThrow())
 }

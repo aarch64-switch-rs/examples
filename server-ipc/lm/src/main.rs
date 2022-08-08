@@ -18,7 +18,6 @@ use nx::ipc::sf;
 use nx::ipc::server;
 use nx::service;
 use nx::service::psc;
-use nx::service::psc::IPmModule;
 use nx::service::psc::IPmService;
 use nx::fs;
 use core::panic;
@@ -41,7 +40,7 @@ pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize 
 #[allow(unreachable_code)]
 pub fn pm_module_main() -> Result<()> {
     let psc = service::new_service_object::<psc::PmService>()?;
-    let module = psc.get().get_pm_module()?.to::<psc::PmModule>();
+    let module = psc.get().get_pm_module()?;
 
     let event_handle = module.get().initialize(psc::ModuleId::Lm, sf::Buffer::empty())?;
     loop {

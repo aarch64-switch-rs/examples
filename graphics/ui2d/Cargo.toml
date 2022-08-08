@@ -5,7 +5,7 @@ authors = ["XorTroll"]
 edition = "2021"
 
 [dependencies]
-nx = { git = "https://github.com/aarch64-switch-rs/nx", features = ["gpu"] }
+nx = { git = "https://github.com/aarch64-switch-rs/nx", features = [ "gpu" ] }
 
 [dependencies.font8x8]
 version = "0.2"

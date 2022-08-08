@@ -5,8 +5,8 @@ authors = ["XorTroll"]
 edition = "2021"
 
 [dependencies]
-nx = { git = "https://github.com/aarch64-switch-rs/nx", features = ["input"] }
+nx = { git = "https://github.com/aarch64-switch-rs/nx", features = [ "input" ] }
 ui2d = { path = "../ui2d" }
 
 [package.metadata.nx.nro]
-nacp = { name = "gpu-simple", author = "XorTroll", version = "Example" }
+nacp = { default_name = "gpu-simple", default_author = "XorTroll", version = "Example" }

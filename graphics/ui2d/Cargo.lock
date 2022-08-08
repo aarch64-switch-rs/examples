@@ -25,9 +25,9 @@ checksum = "e63201c624b8c8883921b1a1accc8916c4fa9dbfb15d122b26e4dde945b86bbf"
 
 [[package]]
 name = "libm"
-version = "0.2.3"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da83a57f3f5ba3680950aa3cbc806fc297bc0b289d42e8942ed528ace71b8145"
+checksum = "33a33a362ce288760ec6a508b94caaec573ae7d3bbbd91b87aa0bad4456839db"
 
 [[package]]
 name = "linked_list_allocator"
@@ -43,7 +43,7 @@ source = "git+https://github.com/aarch64-switch-rs/logpacket#d807c993fb4578e3809
 [[package]]
 name = "nx"
 version = "0.1.0"
-source = "git+https://github.com/aarch64-switch-rs/nx#109307e10c1eaa28729336b94029466110fdeb84"
+source = "git+https://github.com/aarch64-switch-rs/nx#bfa3d790e023acc6dbe07a3ac1f70987e6f62a28"
 dependencies = [
  "arrayvec",
  "linked_list_allocator",
@@ -63,9 +63,9 @@ dependencies = [
 
 [[package]]
 name = "paste"
-version = "1.0.8"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9423e2b32f7a043629287a536f21951e8c6a82482d0acb1eeebfc90bc2225b22"
+checksum = "0c520e05135d6e763148b6426a837e239041653ba7becd2e538c076c738025fc"
 
 [[package]]
 name = "rusttype"
@@ -76,15 +76,6 @@ dependencies = [
  "ab_glyph_rasterizer",
  "libm",
  "owned_ttf_parser",
-]
-
-[[package]]
-name = "simple-window"
-version = "0.1.0"
-dependencies = [
- "libm",
- "nx",
- "ui2d",
 ]
 
 [[package]]

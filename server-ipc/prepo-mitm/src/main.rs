@@ -14,7 +14,7 @@ use nx::util;
 use nx::fs;
 use nx::thread;
 use nx::diag::abort;
-use nx::diag::log;
+use nx::diag::log::{lm::LmLogger, LogSeverity};
 use nx::ipc::server;
 use nx::version;
 use core::panic;
@@ -37,7 +37,7 @@ type Manager = server::ServerManager<POINTER_BUF_SIZE>;
 #[no_mangle]
 pub fn main() -> Result<()> {
     thread::get_current_thread().name.set_str("prepo-mitm.Main");
-    diag_log!(log::LmLogger { log::LogSeverity::Info, true } => "Hello there!\n");
+    diag_log!(LmLogger { LogSeverity::Info, true } => "Hello there!\n");
 
     fs::initialize_fspsrv_session()?;
     fs::mount_sd_card("sdmc")?;
@@ -60,7 +60,7 @@ pub fn main() -> Result<()> {
         manager.register_mitm_service_server::<prepo::PrepoService<{ prepo::SERVICE_TYPE_ADMIN }>>()?;
     }
 
-    diag_log!(log::LmLogger { log::LogSeverity::Info, true } => "Looping...\n");
+    diag_log!(LmLogger { LogSeverity::Info, true } => "Looping...\n");
     manager.loop_process()?;
 
     fs::finalize_fspsrv_session();
@@ -70,5 +70,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, abort::AbortLevel::SvcBreak())
+    util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::SvcBreak())
 }

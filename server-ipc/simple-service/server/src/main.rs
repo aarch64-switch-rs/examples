@@ -12,7 +12,7 @@ extern crate paste;
 use nx::result::*;
 use nx::util;
 use nx::diag::abort;
-use nx::diag::log;
+use nx::diag::log::{lm::LmLogger, LogSeverity};
 use nx::ipc::sf;
 use nx::ipc::server;
 use nx::service::sm;
@@ -28,18 +28,20 @@ ipc_sf_define_interface_trait! {
     }
 }
 
-pub struct DemoService {}
+pub struct DemoService {
+    dummy_session: sf::Session
+}
 
 impl IDemoService for DemoService {
     fn sample_command(&mut self, u32s_buf: sf::OutPointerBuffer<u32>) -> Result<()> {
-        diag_log!(log::LmLogger { log::LogSeverity::Trace, true } => "List count: {}", u32s_buf.get_count());
+        diag_log!(LmLogger { LogSeverity::Trace, true } => "List count: {}", u32s_buf.get_count());
 
         let u32s = u32s_buf.get_mut_slice();
         for u32_val in u32s {
             // For each u32 we got sent, replace it as <orig-val> * 3
             let orig_val = *u32_val;
             *u32_val = orig_val * 3;
-            diag_log!(log::LmLogger { log::LogSeverity::Trace, true } => "Updating {} -> {}...", orig_val, *u32_val);
+            diag_log!(LmLogger { LogSeverity::Trace, true } => "Updating {} -> {}...", orig_val, *u32_val);
         }
         
         Ok(())
@@ -48,13 +50,19 @@ impl IDemoService for DemoService {
 
 impl sf::IObject for DemoService {
     ipc_sf_object_impl_default_command_metadata!();
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.dummy_session
+    }
 }
 
 impl server::ISessionObject for DemoService {}
 
 impl server::IServerObject for DemoService {
     fn new() -> Self {
-        Self {}
+        Self {
+            dummy_session: sf::Session::new()
+        }
     }
 }
 
@@ -92,5 +100,5 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, abort::AbortLevel::FatalThrow())
+    util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::FatalThrow())
 }

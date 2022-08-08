@@ -10,7 +10,6 @@ use nx::svc;
 use nx::result::*;
 use nx::util;
 use nx::diag::abort;
-use nx::diag::log;
 use nx::diag::log::lm::LmLogger;
 use nx::gpu;
 use nx::service::hid;

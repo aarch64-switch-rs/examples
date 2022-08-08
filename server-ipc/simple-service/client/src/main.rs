@@ -11,7 +11,7 @@ use nx::svc;
 use nx::result::*;
 use nx::util;
 use nx::diag::abort;
-use nx::diag::log;
+use nx::diag::log::{lm::LmLogger, LogSeverity};
 use nx::ipc::sf;
 use nx::ipc::client;
 use nx::service;
@@ -34,15 +34,15 @@ pub struct DemoService {
 
 impl sf::IObject for DemoService {
     ipc_sf_object_impl_default_command_metadata!();
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
+    }
 }
 
 impl client::IClientObject for DemoService {
     fn new(session: sf::Session) -> Self {
         Self { session: session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 
@@ -85,12 +85,12 @@ pub fn main() -> Result<()> {
     let mut u32s: [u32; 5] = [0; 5];
     demo_srv.get().sample_command(sf::Buffer::from_mut_array(&mut u32s))?;
 
-    diag_log!(log::LmLogger { log::LogSeverity::Trace, false } => "u32 list after sample_command: {} {} {} {} {}", u32s[0], u32s[1], u32s[2], u32s[3], u32s[4]);
+    diag_log!(LmLogger { LogSeverity::Trace, false } => "u32 list after sample_command: {:?}", u32s);
 
     Ok(())
 }
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, abort::AbortLevel::FatalThrow())
+    util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::FatalThrow())
 }

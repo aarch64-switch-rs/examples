@@ -11,7 +11,7 @@ use nx::svc;
 use nx::result::*;
 use nx::util;
 use nx::diag::abort;
-use nx::diag::log;
+use nx::diag::log::{lm::LmLogger, LogSeverity};
 use nx::service;
 use nx::ipc::sf;
 use nx::ipc::client;
@@ -34,6 +34,10 @@ pub struct PsmServer {
 
 impl sf::IObject for PsmServer {
     ipc_sf_object_impl_default_command_metadata!();
+
+    fn get_session(&mut self) -> &mut sf::Session {
+        &mut self.session
+    }
 }
 
 impl IPsmServer for PsmServer {
@@ -45,10 +49,6 @@ impl IPsmServer for PsmServer {
 impl client::IClientObject for PsmServer {
     fn new(session: sf::Session) -> Self {
         Self { session: session }
-    }
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
     }
 }
 
@@ -83,12 +83,12 @@ pub fn main() -> Result<()> {
     let psm = service::new_service_object::<PsmServer>()?;
 
     let battery_p = psm.get().get_battery_charge_percentage()?;
-    diag_log!(log::LmLogger { log::LogSeverity::Trace, true } => "Battery percentage value: {}%\n", battery_p);
+    diag_log!(LmLogger { LogSeverity::Trace, true } => "Battery percentage value: {}%\n", battery_p);
 
     Ok(())
 }
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    util::simple_panic_handler::<log::LmLogger>(info, abort::AbortLevel::FatalThrow())
+    util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::FatalThrow())
 }
