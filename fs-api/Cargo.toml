@@ -5,7 +5,7 @@ authors = ["XorTroll"]
 edition = "2021"
 
 [dependencies]
-nx = { git = "https://github.com/aarch64-switch-rs/nx", features = [ "services", "fs" ] }
+nx = { git = "https://github.com/aarch64-switch-rs/nx", features = [ "fs" ] }
 
 [package.metadata.nx.nro]
 nacp = { default_name = "fs-api", default_author = "XorTroll", version = "Example" }
