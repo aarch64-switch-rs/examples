@@ -4,11 +4,15 @@ Homebrew examples of Nintendo Switch homebrew written with this organization's t
 
 ## Example list
 
-- `applet`:
+- `applet`: library applets
 
   - `libapplet-launch`: example of manually launching the `PlayerSelect` library applet (will be removed/replaced with libapplet support gets properly implemented in `nx`)
 
-- `fs-api`: example of the filesystem API
+- `fs-api`: filesystem API
+
+  - `file-rw`: example of reading/writing files
+
+  - `dir-list`: example of listing files/dirs
 
 - `graphics`:
 
