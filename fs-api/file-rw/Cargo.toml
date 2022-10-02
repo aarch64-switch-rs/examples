@@ -1,5 +1,5 @@
 [package]
-name = "fs-api"
+name = "file-rw"
 version = "0.1.0"
 authors = ["XorTroll"]
 edition = "2021"
@@ -8,4 +8,4 @@ edition = "2021"
 nx = { git = "https://github.com/aarch64-switch-rs/nx", features = [ "fs" ] }
 
 [package.metadata.nx.nro]
-nacp = { default_name = "fs-api", default_author = "XorTroll", version = "Example" }
+nacp = { default_name = "file-rw", default_author = "XorTroll", version = "Example" }
