@@ -22,7 +22,7 @@ source = "git+https://github.com/aarch64-switch-rs/logpacket#d807c993fb4578e3809
 [[package]]
 name = "nx"
 version = "0.1.0"
-source = "git+https://github.com/aarch64-switch-rs/nx#109307e10c1eaa28729336b94029466110fdeb84"
+source = "git+https://github.com/aarch64-switch-rs/nx#5506c73669df1608cc1d735cd8548480b52cda55"
 dependencies = [
  "arrayvec",
  "linked_list_allocator",
@@ -33,9 +33,9 @@ dependencies = [
 
 [[package]]
 name = "paste"
-version = "1.0.8"
+version = "1.0.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9423e2b32f7a043629287a536f21951e8c6a82482d0acb1eeebfc90bc2225b22"
+checksum = "d01a5bd0424d00070b0098dd17ebca6f961a959dead1dbcbbbc1d1cd8d3deeba"
 
 [[package]]
 name = "prepo-mitm"
