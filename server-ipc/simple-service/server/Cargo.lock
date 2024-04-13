@@ -4,15 +4,15 @@ version = 3
 
 [[package]]
 name = "arrayvec"
-version = "0.5.2"
+version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23b62fc65de8e4e7f52534fb52b0f3ed04746ae267519eef2a83941e8085068b"
+checksum = "96d30a06541fbafbc7f82ed10c06164cfbd2c401138f6addd8404629c4b16711"
 
 [[package]]
 name = "linked_list_allocator"
-version = "0.9.1"
+version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "549ce1740e46b291953c4340adcd74c59bcf4308f4cac050fd33ba91b7168f4a"
+checksum = "9afa463f5405ee81cdb9cc2baf37e08ec7e4c8209442b5d72c04cfb2cd6e6286"
 
 [[package]]
 name = "logpacket"
@@ -22,7 +22,7 @@ source = "git+https://github.com/aarch64-switch-rs/logpacket#d807c993fb4578e3809
 [[package]]
 name = "nx"
 version = "0.1.0"
-source = "git+https://github.com/aarch64-switch-rs/nx#5506c73669df1608cc1d735cd8548480b52cda55"
+source = "git+https://github.com/aarch64-switch-rs/nx#6a667357275a7700ee98c89fe2e27227261c0fb0"
 dependencies = [
  "arrayvec",
  "linked_list_allocator",
@@ -33,9 +33,9 @@ dependencies = [
 
 [[package]]
 name = "paste"
-version = "1.0.11"
+version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d01a5bd0424d00070b0098dd17ebca6f961a959dead1dbcbbbc1d1cd8d3deeba"
+checksum = "de3145af08024dea9fa9914f381a17b8fc6034dfb00f3a84013f7ff43f29ed4c"
 
 [[package]]
 name = "server"

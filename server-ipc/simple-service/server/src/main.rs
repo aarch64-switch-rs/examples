@@ -24,7 +24,7 @@ use core::panic;
 
 ipc_sf_define_interface_trait! {
     trait IDemoService {
-        sample_command [123, version::VersionInterval::all()]: (u32s_buf: sf::OutPointerBuffer<u32>) => ();
+        sample_command [999, version::VersionInterval::all()]: (a: u32, b: u64, c: sf::InAutoSelectBuffer<u8>, d: sf::OutAutoSelectBuffer<u8>) => ();
     }
 }
 
@@ -33,16 +33,11 @@ pub struct DemoService {
 }
 
 impl IDemoService for DemoService {
-    fn sample_command(&mut self, u32s_buf: sf::OutPointerBuffer<u32>) -> Result<()> {
-        diag_log!(LmLogger { LogSeverity::Trace, true } => "List count: {}", u32s_buf.get_count());
-
-        let u32s = u32s_buf.get_mut_slice();
-        for u32_val in u32s {
-            // For each u32 we got sent, replace it as <orig-val> * 3
-            let orig_val = *u32_val;
-            *u32_val = orig_val * 3;
-            diag_log!(LmLogger { LogSeverity::Trace, true } => "Updating {} -> {}...", orig_val, *u32_val);
-        }
+    fn sample_command(&mut self, a: u32, b: u64, c: sf::InAutoSelectBuffer<u8>, d: sf::OutAutoSelectBuffer<u8>) -> Result<()> {
+        diag_log!(LmLogger { LogSeverity::Trace, true } => "a: {}", a);
+        diag_log!(LmLogger { LogSeverity::Trace, true } => "b: {}", b);
+        diag_log!(LmLogger { LogSeverity::Trace, true } => "c len: {}", c.get_string().len());
+        diag_log!(LmLogger { LogSeverity::Trace, true } => "d len: {}", d.get_string().len());
         
         Ok(())
     }

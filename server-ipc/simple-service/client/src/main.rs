@@ -17,14 +17,14 @@ use nx::ipc::client;
 use nx::service;
 use nx::service::sm;
 use nx::version;
-
+use alloc::vec::Vec;
 use core::panic;
 
 // Same interface as /server project
 
 ipc_sf_define_interface_trait! {
     trait IDemoService {
-        sample_command [123, version::VersionInterval::all()]: (u32s_buf: sf::OutPointerBuffer<u32>) => ();
+        sample_command [999, version::VersionInterval::all()]: (a: u32, b: u64, c: sf::InAutoSelectBuffer<u8>, d: sf::OutAutoSelectBuffer<u8>) => ();
     }
 }
 
@@ -47,8 +47,8 @@ impl client::IClientObject for DemoService {
 }
 
 impl IDemoService for DemoService {
-    fn sample_command(&mut self, u32s_buf: sf::OutPointerBuffer<u32>) -> Result<()> {
-        ipc_client_send_request_command!([self.session.object_info; 123] (u32s_buf) => ())
+    fn sample_command(&mut self, a: u32, b: u64, c: sf::InAutoSelectBuffer<u8>, d: sf::OutAutoSelectBuffer<u8>) -> Result<()> {
+        ipc_client_send_request_command!([self.session.object_info; 999] (a, b, c, d) => ())
     }
 }
 
@@ -82,10 +82,10 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 pub fn main() -> Result<()> {
     let demo_srv = service::new_service_object::<DemoService>()?;
 
-    let mut u32s: [u32; 5] = [0; 5];
-    demo_srv.get().sample_command(sf::Buffer::from_mut_array(&mut u32s))?;
+    let demo = "demo";
+    let mut mode: Vec<u8> = vec![0u8; 0x100];
 
-    diag_log!(LmLogger { LogSeverity::Trace, false } => "u32 list after sample_command: {:?}", u32s);
+    demo_srv.get().sample_command(0x7, 0x82, sf::InAutoSelectBuffer::from_array(demo.as_bytes()), sf::OutAutoSelectBuffer::from_mut_array(&mut mode))?;
 
     Ok(())
 }
