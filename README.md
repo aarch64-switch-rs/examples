@@ -31,6 +31,8 @@ Homebrew examples of Nintendo Switch homebrew written with this organization's t
 - `server-ipc`:
 
   - `lm`: simple replacement of `LogManager` sysmodule
+  
+  - `ams-ecs`: simple usage of Atmosphere's external content source API to take over a game and redirect it to custom ExeFs/RomFs on the SD card
 
   - `prepo-mitm`: simple MitM of `prepo` (Play Report) services
 
