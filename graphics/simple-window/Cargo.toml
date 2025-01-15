@@ -5,7 +5,7 @@ authors = ["XorTroll"]
 edition = "2021"
 
 [dependencies]
-nx = { git = "https://github.com/aarch64-switch-rs/nx", features = [ "input" ] }
+nx = { workspace = true, features = [ "input", "gpu" ] }
 ui2d = { path = "../ui2d" }
 
 [dependencies.libm]
@@ -28,7 +28,7 @@ disable_device_address_space_merge = false
 is_production = true
 unqualified_approval = false
 memory_region = 2
-program_id = "0x010000000000ABBA"
+program_id = "0x0100000000000353"
 
 [package.metadata.nx.nsp.npdm.fs_access_control]
 flags = "0xFFFFFFFFFFFFFFFF"

@@ -31,9 +31,8 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 pub fn main() -> Result<()> {
     // Support all basic controller styles (pro-controller, handheld and joy-cons in single and dual modes)
     let supported_style_tags = hid::NpadStyleTag::FullKey() | hid::NpadStyleTag::Handheld() | hid::NpadStyleTag::JoyDual() | hid::NpadStyleTag::JoyLeft() | hid::NpadStyleTag::JoyRight();
-    let supported_npad_ids = [hid::NpadIdType::No1, hid::NpadIdType::Handheld];
 
-    let input_ctx = input::Context::new(supported_style_tags, &supported_npad_ids)?;
+    let input_ctx = input::Context::new(supported_style_tags, 1)?;
 
     // Track player 1 and handheld
     let mut p1 = input_ctx.get_player(hid::NpadIdType::No1);

@@ -1,11 +1,12 @@
 [package]
-name = "client"
+name = "simple-service-client"
 version = "0.1.0"
 authors = ["XorTroll"]
 edition = "2021"
 
 [dependencies]
-nx = { git = "https://github.com/aarch64-switch-rs/nx", features = [ "services" ] }
+simple-service-server ={ path = "../server"}
+nx = { workspace = true, features = [ "services" ] }
 paste = "1.0"
 
 [package.metadata.nx.nro]

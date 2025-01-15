@@ -4,8 +4,7 @@
 #[macro_use]
 extern crate alloc;
 
-#[macro_use]
-extern crate nx;
+use nx::diag_log;
 use nx::thread;
 use nx::svc;
 use nx::result::*;
@@ -31,37 +30,31 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 pub fn main() -> Result<()> {
     diag_log!(LmLogger { LogSeverity::Trace, false } => "Starting threads...\n");
 
-    let mut t1 = thread::Thread::new(move |&(i1, i2, i3, c1, c2, c3, c4)| {
+    let t1_args = (1, 2, 3, 'c', 'd', 'b', 'a');
+    let t1 = thread::spawn(move || {
+        let (i1, i2, i3, c1, c2, c3, c4) = t1_args;
         diag_log!(LmLogger { LogSeverity::Trace, false } => "Thread 1 sample params: {} {} {} {} {} {} {}\n", i1, i2, i3, c1, c2, c3, c4);
         for i in 0..5 {
-            diag_log!(LmLogger { LogSeverity::Trace, false } => "Hi from thread 1 (ID: {}) {}\n", thread::get_current_thread().get_id().unwrap(), i);
+            diag_log!(LmLogger { LogSeverity::Trace, false } => "Hi from thread 1 (ID: {}) {}\n", nx::svc::get_thread_id(nx::svc::CURRENT_THREAD_PSEUDO_HANDLE).unwrap_or(u64::MAX), i);
         }
-    }, &(1, 2, 3, 'c', 'd', 'b', 'a'), "Thread1", 0x1000)?;
-    t1.initialize(thread::PRIORITY_AUTO, -2)?;
+    });
 
-    let mut t2 = thread::Thread::new(move |()| {
+    let t2 = thread::spawn(move || {
         for i in 0..5 {
-            diag_log!(LmLogger { LogSeverity::Trace, false } => "Ohayo from thread 2 (ID: {}) {}\n", thread::get_current_thread().get_id().unwrap(), i);
+            diag_log!(LmLogger { LogSeverity::Trace, false } => "Ohayo from thread 2 (ID: {}) {}\n", nx::svc::get_thread_id(nx::svc::CURRENT_THREAD_PSEUDO_HANDLE).unwrap_or(u64::MAX), i);
         }
-    }, &(), "Thread2", 0x1000)?;
-    t2.initialize(thread::PRIORITY_AUTO, -2)?;
+    });
 
-    let mut t3 = thread::Thread::new(move |()| {
+    let t3 = thread::spawn(move || {
         for i in 0..5 {
-            diag_log!(LmLogger { LogSeverity::Trace, false } => "Sup from thread 3 (ID: {}) {}\n", thread::get_current_thread().get_id().unwrap(), i);
+            diag_log!(LmLogger { LogSeverity::Trace, false } => "Sup from thread 3 (ID: {}) {}\n", nx::svc::get_thread_id(nx::svc::CURRENT_THREAD_PSEUDO_HANDLE).unwrap_or(u64::MAX), i);
         }
-    }, &(), "Thread3", 0x1000)?;
-    t3.initialize(thread::PRIORITY_AUTO, -2)?;
+    });
 
-    diag_log!(LmLogger { LogSeverity::Trace, false } => "Thread IDs: {} {} {}\n", t1.get_id()?, t2.get_id()?, t3.get_id()?);
 
-    t1.start()?;
-    t2.start()?;
-    t3.start()?;
-
-    t1.join()?;
-    t2.join()?;
-    t3.join()?;
+    t1.join();
+    t2.join();
+    t3.join();
 
     diag_log!(LmLogger { LogSeverity::Trace, false } => "Done!\n");
 

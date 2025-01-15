@@ -1,0 +1,22 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "applet/libapplet-launch",
+    "fs-api/*",
+    "graphics/gpu-simple",
+    "graphics/simple-window",
+    "graphics/ui2d",
+    "input",
+    "os/threads",
+    "server-ipc/lm",
+    "server-ipc/prepo-mitm",
+    "server-ipc/simple-mitm-service/client",
+    "server-ipc/simple-mitm-service/server",
+    "server-ipc/simple-service/client",
+    "server-ipc/simple-service/server"
+]
+
+[workspace.dependencies]
+nx = { git = "https://github.com/pantsman0/nx", branch = "getting_ready_for_merge", features = [ "input", "gpu", "fs" ] }
+#nx = { git = "https://github.com/aarch64-switch-rs/nx", features = [ "input", "gpu", "fs" ] }

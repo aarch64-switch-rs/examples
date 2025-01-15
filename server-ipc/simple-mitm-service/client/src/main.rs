@@ -7,6 +7,7 @@ extern crate nx;
 #[macro_use]
 extern crate alloc;
 
+use nx::service::psm::PsmServer;
 use nx::svc;
 use nx::result::*;
 use nx::util;
@@ -17,54 +18,9 @@ use nx::ipc::sf;
 use nx::ipc::client;
 use nx::service::sm;
 use nx::version;
+use nx::service::psm::IPsmServer;
 
 use core::panic;
-
-// Same interface as /server project
-
-ipc_sf_define_interface_trait! {
-    trait IPsmServer {
-        get_battery_charge_percentage [0, version::VersionInterval::all()]: () => (percentage: u32);
-    }
-}
-
-pub struct PsmServer {
-    session: sf::Session
-}
-
-impl sf::IObject for PsmServer {
-    ipc_sf_object_impl_default_command_metadata!();
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.session
-    }
-}
-
-impl IPsmServer for PsmServer {
-    fn get_battery_charge_percentage(&mut self) -> Result<u32> {
-        ipc_client_send_request_command!([self.session.object_info; 0] () => (percentage: u32))
-    }
-}
-
-impl client::IClientObject for PsmServer {
-    fn new(session: sf::Session) -> Self {
-        Self { session: session }
-    }
-}
-
-impl service::IService for PsmServer {
-    fn get_name() -> sm::ServiceName {
-        sm::ServiceName::new("psm")
-    }
-
-    fn as_domain() -> bool {
-        false
-    }
-
-    fn post_initialize(&mut self) -> Result<()> {
-        Ok(())
-    }
-}
 
 #[no_mangle]
 pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
@@ -82,7 +38,7 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 pub fn main() -> Result<()> {
     let psm = service::new_service_object::<PsmServer>()?;
 
-    let battery_p = psm.get().get_battery_charge_percentage()?;
+    let battery_p = psm.get_battery_charge_percentage()?;
     diag_log!(LmLogger { LogSeverity::Trace, true } => "Battery percentage value: {}%\n", battery_p);
 
     Ok(())

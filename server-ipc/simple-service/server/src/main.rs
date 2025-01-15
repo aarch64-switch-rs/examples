@@ -16,23 +16,15 @@ use nx::diag::log::{lm::LmLogger, LogSeverity};
 use nx::ipc::sf;
 use nx::ipc::server;
 use nx::service::sm;
-use nx::version;
+
+use simple_service_server::IDemoServiceServer;
 
 use core::panic;
+use core::ptr::addr_of_mut;
 
-// Same interface as /client project
+pub struct DemoServiceServer;
 
-ipc_sf_define_interface_trait! {
-    trait IDemoService {
-        sample_command [999, version::VersionInterval::all()]: (a: u32, b: u64, c: sf::InAutoSelectBuffer<u8>, d: sf::OutAutoSelectBuffer<u8>) => ();
-    }
-}
-
-pub struct DemoService {
-    dummy_session: sf::Session
-}
-
-impl IDemoService for DemoService {
+impl IDemoServiceServer for DemoServiceServer {
     fn sample_command(&mut self, a: u32, b: u64, c: sf::InAutoSelectBuffer<u8>, d: sf::OutAutoSelectBuffer<u8>) -> Result<()> {
         diag_log!(LmLogger { LogSeverity::Trace, true } => "a: {}", a);
         diag_log!(LmLogger { LogSeverity::Trace, true } => "b: {}", b);
@@ -43,31 +35,24 @@ impl IDemoService for DemoService {
     }
 }
 
-impl sf::IObject for DemoService {
-    ipc_sf_object_impl_default_command_metadata!();
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.dummy_session
+impl server::ISessionObject for DemoServiceServer {
+    fn try_handle_request_by_id(&mut self, req_id: u32, protocol: nx::ipc::CommandProtocol, server_ctx: &mut server::ServerContext) -> Option<Result<()>> {
+        <Self as IDemoServiceServer>::try_handle_request_by_id(self, req_id, protocol, server_ctx)
     }
 }
 
-impl server::ISessionObject for DemoService {}
-
-impl server::IServerObject for DemoService {
+impl server::IServerObject for DemoServiceServer {
     fn new() -> Self {
-        Self {
-            dummy_session: sf::Session::new()
-        }
+        Self
     }
 }
 
-impl server::IService for DemoService {
+impl server::IService for DemoServiceServer {
     fn get_name() -> sm::ServiceName {
         sm::ServiceName::new("dmo-srv")
     }
-
     fn get_max_sesssions() -> i32 {
-        0x40
+        20
     }
 }
 
@@ -78,7 +63,7 @@ static mut CUSTOM_HEAP: [u8; CUSTOM_HEAP_LEN] = [0; CUSTOM_HEAP_LEN];
 #[no_mangle]
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     unsafe {
-        util::PointerAndSize::new(CUSTOM_HEAP.as_mut_ptr(), CUSTOM_HEAP.len())
+        util::PointerAndSize::new(addr_of_mut!(CUSTOM_HEAP) as _, CUSTOM_HEAP_LEN)
     }
 }
 
@@ -87,7 +72,7 @@ pub fn main() -> Result<()> {
     const POINTER_BUF_SIZE: usize = 0x400;
     let mut manager: server::ServerManager<POINTER_BUF_SIZE> = server::ServerManager::new()?;
 
-    manager.register_service_server::<DemoService>()?;
+    manager.register_service_server::<DemoServiceServer>()?;
     manager.loop_process()?;
 
     Ok(())

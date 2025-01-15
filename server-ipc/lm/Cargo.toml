@@ -5,7 +5,7 @@ authors = ["XorTroll"]
 edition = "2021"
 
 [dependencies]
-nx = { git = "https://github.com/aarch64-switch-rs/nx", features = [ "fs" ] }
+nx = { workspace = true, features = [ "fs" ] }
 paste = "1.0"
 
 [package.metadata.nx.nsp.npdm]

@@ -4,6 +4,11 @@
 extern crate alloc;
 
 extern crate nx;
+use nx::service::applet::ILibraryAppletAccessor;
+use nx::service::applet::ILibraryAppletCreator;
+use nx::service::applet::ILibraryAppletProxy;
+use nx::service::applet::IStorage;
+use nx::service::applet::IStorageAccessor;
 use nx::svc;
 use nx::arm;
 use nx::result::*;
@@ -24,7 +29,7 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
         hbl_heap
     }
     else {
-        let heap_size: usize = 0x10000000;
+        let heap_size: usize = 0x800000;
         let heap_address = svc::set_heap_size(heap_size).unwrap();
         util::PointerAndSize::new(heap_address, heap_size)
     }
@@ -53,33 +58,33 @@ pub fn main() -> Result<()> {
     let applet_proxy_srv = service::new_service_object::<applet::AllSystemAppletProxiesService>()?;
     
     let attr: applet::AppletAttribute = unsafe { core::mem::zeroed() };
-    let lib_applet_proxy = applet_proxy_srv.get().open_library_applet_proxy(sf::ProcessId::new(), sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Buffer::from_var(&attr))?;
-    let lib_applet_creator = lib_applet_proxy.get().get_library_applet_creator()?;
-    let lib_applet_accessor = lib_applet_creator.get().create_library_applet(applet::AppletId::LibraryAppletPlayerSelect, applet::LibraryAppletMode::AllForeground)?;
+    let lib_applet_proxy = applet_proxy_srv.open_library_applet_proxy(sf::ProcessId::new(), sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE), sf::Buffer::from_var(&attr))?;
+    let lib_applet_creator = lib_applet_proxy.get_library_applet_creator()?;
+    let lib_applet_accessor = lib_applet_creator.create_library_applet(applet::AppletId::LibraryAppletPlayerSelect, applet::LibraryAppletMode::AllForeground)?;
 
     {
         let common_args = CommonArguments::new(1, 0x20000, 0, false);
-        let storage = lib_applet_creator.get().create_storage(common_args.size as usize)?;
+        let storage = lib_applet_creator.create_storage(common_args.size as usize)?;
         {
-            let storage_accessor = storage.get().open()?;
-            storage_accessor.get().write(0, sf::Buffer::from_other_var(&common_args))?;
+            let storage_accessor = storage.open()?;
+            storage_accessor.write(0, sf::Buffer::from_other_var(&common_args))?;
         }
-        lib_applet_accessor.get().push_in_data(storage)?;
+        lib_applet_accessor.push_in_data(storage)?;
     }
 
     {
         let mut data: [u8; 0xA0] = [0; 0xA0];
         data[0x96] = 1;
-        let storage = lib_applet_creator.get().create_storage(data.len())?;
+        let storage = lib_applet_creator.create_storage(data.len())?;
         {
-            let storage_accessor = storage.get().open()?;
-            storage_accessor.get().write(0, sf::Buffer::from_array(&data))?;
+            let storage_accessor = storage.open()?;
+            storage_accessor.write(0, sf::Buffer::from_array(&data))?;
         }
-        lib_applet_accessor.get().push_in_data(storage)?;
+        lib_applet_accessor.push_in_data(storage)?;
     }
 
-    let event_handle = lib_applet_accessor.get().get_applet_state_changed_event()?;
-    lib_applet_accessor.get().start()?;
+    let event_handle = lib_applet_accessor.get_applet_state_changed_event()?;
+    lib_applet_accessor.start()?;
 
     wait::wait_handles(&[event_handle.handle], -1)?;
 

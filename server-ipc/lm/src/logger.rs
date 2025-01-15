@@ -8,7 +8,7 @@ use alloc::string::String;
 
 const BASE_LOG_DIR: &'static str = "sdmc:/lm-binlogs";
 
-static mut G_ENABLED: sync::Locked<bool> = sync::Locked::new(false, true);
+static mut G_ENABLED: sync::Mutex<bool> = sync::Mutex::new(true);
 
 pub fn set_log_enabled(enabled: bool) {
     unsafe {
@@ -33,21 +33,21 @@ impl LogBinaryHeader {
 }
 
 pub fn initialize() -> Result<()> {
-    let _ = fs::delete_directory(String::from(BASE_LOG_DIR));
-    fs::create_directory(String::from(BASE_LOG_DIR))
+    let _ = fs::remove_dir(BASE_LOG_DIR);
+    fs::create_directory(BASE_LOG_DIR)
 }
 
 fn log_packet_buf_impl(packet_buf: *const u8, packet_buf_size: usize, bin_header: LogBinaryHeader, log_dir: String, log_buf_file: String) -> Result<()> {
     unsafe {
         if G_ENABLED.get_val() {
-            let _ = fs::create_directory(String::from(BASE_LOG_DIR));
-            let _ = fs::create_directory(log_dir);
+            let _ = fs::create_directory(BASE_LOG_DIR);
+            let _ = fs::create_directory(log_dir.as_str());
 
-            let _ = fs::delete_file(log_buf_file.clone());
+            let _ = fs::remove_file(log_buf_file.as_str());
 
-            let mut log_file = fs::open_file(log_buf_file, fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append())?;
-            log_file.write_val(bin_header)?;
-            log_file.write(packet_buf, packet_buf_size)?;
+            let mut log_file = fs::open_file(log_buf_file.as_str(), fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append())?;
+            log_file.write_val(&bin_header)?;
+            log_file.write_array(core::slice::from_raw_parts(packet_buf, packet_buf_size))?;
         }
     }
     Ok(())
@@ -56,11 +56,11 @@ fn log_packet_buf_impl(packet_buf: *const u8, packet_buf_size: usize, bin_header
 fn log_self_impl(self_msg: String, log_dir: String, log_buf_file: String) -> Result<()> {
     unsafe {
         if G_ENABLED.get_val() {
-            let _ = fs::create_directory(String::from(BASE_LOG_DIR));
-            let _ = fs::create_directory(log_dir);
+            let _ = fs::create_directory(BASE_LOG_DIR);
+            let _ = fs::create_directory(log_dir.as_str());
 
-            let mut log_file = fs::open_file(log_buf_file, fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append())?;
-            log_file.write(self_msg.as_ptr(), self_msg.len())?;
+            let mut log_file = fs::open_file(log_buf_file.as_str(), fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append())?;
+            log_file.write_array(self_msg.as_bytes())?;
         }
     }
     Ok(())
@@ -98,11 +98,7 @@ impl log::Logger for SelfLogger {
             log::LogSeverity::Error => "Error",
             log::LogSeverity::Fatal => "Fatal",
         };
-        let thread_name = match thread::get_current_thread().name.get_str() {
-            Ok(name) => name,
-            _ => "<unknown>",
-        };
-        let msg = format!("[ SelfLog (severity: {}, verbosity: {}) from {} in thread {}, at {}:{} ] {}\n", severity_str, metadata.verbosity, metadata.fn_name, thread_name, metadata.file_name, metadata.line_number, metadata.msg);
+        let msg = format!("[ SelfLog (severity: {}, verbosity: {}) from {} in thread {}, at {}:{} ] {}\n", severity_str, metadata.verbosity, metadata.fn_name, thread::get_current_thread_name(), metadata.file_name, metadata.line_number, metadata.msg);
         log_self(msg);
     }
 }

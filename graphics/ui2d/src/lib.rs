@@ -2,18 +2,24 @@
 
 // Note: quite simple lib made for UI tests to easily render stuff
 
+use ab_glyph::Font;
+use ab_glyph::Glyph;
+use ab_glyph::Point;
+use ab_glyph::ScaleFont;
+use nx::util::align_up;
 use nx::result::*;
 use nx::gpu;
 use nx::arm;
 
 extern crate alloc;
-use alloc::string::String;
 use alloc::vec::Vec;
 use core::ptr;
 use core::mem;
 use font8x8::UnicodeFonts;
 
-pub type Font<'a> = rusttype::Font<'a>;
+//pub type Font<'a> = rusttype::Font<'a>;
+
+pub type FontType<'a> = ab_glyph::FontRef<'a>;
 
 #[derive(Copy, Clone)]
 pub struct RGBA8 {
@@ -87,8 +93,8 @@ pub struct SurfaceEx {
 
 impl SurfaceEx {
     pub fn from(surface: gpu::surface::Surface) -> Self {
-        let aligned_width = surface.compute_stride() as usize;
-        let aligned_height = ((surface.get_height() + 7) & !7) as usize;
+        let aligned_width = surface.pitch() as usize;
+        let aligned_height = align_up(surface.get_height(), 8) as usize;
         let linear_buf_size = aligned_width * aligned_height;
         unsafe {
             let linear_buf_layout = alloc::alloc::Layout::from_size_align_unchecked(linear_buf_size, 8);
@@ -110,26 +116,32 @@ impl SurfaceEx {
         &mut self.surface_ref
     }
 
-    fn convert_buffers_gob_impl(out_gob_buf: *mut u8, in_gob_buf: *mut u8, stride: u32) {
+    fn convert_buffers_gob_impl(out_gob_buf: *mut u8, in_gob_buf: *const u8, stride: u32) {
         unsafe {
             let mut tmp_out_gob_buf_128 = out_gob_buf as *mut u128;
             for i in 0..32 {
                 let y = ((i >> 1) & 0x6) | (i & 0x1);
                 let x = ((i << 3) & 0x10) | ((i << 1) & 0x20);
                 let out_gob_buf_128 = tmp_out_gob_buf_128 as *mut u128;
-                let in_gob_buf_128 = in_gob_buf.offset((y * stride + x) as isize) as *mut u128;
+                let in_gob_buf_128 = in_gob_buf.offset((y * stride + x) as isize) as *const u128;
                 *out_gob_buf_128 = *in_gob_buf_128;
                 tmp_out_gob_buf_128 = tmp_out_gob_buf_128.offset(1);
             }
         }
     }
 
-    fn convert_buffers_impl(out_buf: *mut u8, in_buf: *mut u8, stride: u32, height: u32) {
-        let block_height_gobs = 1 << gpu::BLOCK_HEIGHT_LOG2;
-        let block_height_px = 8 << gpu::BLOCK_HEIGHT_LOG2;
+    fn convert_buffers_impl(&mut self) {
+        let block_config: gpu::BlockLinearHeights = self.surface_ref.get_block_linear_config();
+        let block_height_gobs = 1 << block_config.block_height_log2();
+        let block_height_px = 8 <<  block_config.block_height_log2();
+
+        let out_buf = self.gpu_buf as *mut u8;
+        let in_buf = self.linear_buf as *const u8;
+        let stride = self.surface_ref.pitch();
+        let height = self.surface_ref.get_height();
 
         let width_blocks = stride >> 6;
-        let height_blocks = (height + block_height_px - 1) >> (3 + gpu::BLOCK_HEIGHT_LOG2);
+        let height_blocks = (height + block_height_px - 1) >> (3 +  block_config.block_height_log2());
         let mut tmp_out_buf = out_buf;
 
         for block_y in 0..height_blocks {
@@ -150,8 +162,8 @@ impl SurfaceEx {
     }
 
     pub fn end(&mut self) -> Result<()> {
-        Self::convert_buffers_impl(self.gpu_buf as *mut u8, self.linear_buf as *mut u8, self.surface_ref.compute_stride(), self.surface_ref.get_height());
-        arm::cache_flush(self.gpu_buf as *mut u8, self.gpu_buf_size);
+        Self::convert_buffers_impl(self);
+        unsafe {arm::cache_flush(self.gpu_buf as *mut u8, self.gpu_buf_size)};
         self.surface_ref.queue_buffer(self.slot, self.fences)?;
         self.surface_ref.wait_vsync_event(-1)
     }
@@ -166,10 +178,10 @@ impl SurfaceEx {
         }
     }
 
-    pub fn draw_single(&mut self, x: i32, y: i32, color: RGBA8, blend: bool) {
+    pub fn draw_single(&mut self, x: u32, y: u32, color: RGBA8, blend: bool) {
         unsafe {
-            let offset = ((self.surface_ref.compute_stride() / mem::size_of::<u32>() as u32) as i32 * y + x) as isize;
-            let cur = self.linear_buf.offset(offset);
+            let offset = self.surface_ref.stride() * y + x;
+            let cur = self.linear_buf.add(offset as usize); // this is fine since and item in the linear_buf is pixel sized.
             let old_color = RGBA8::from_abgr(*cur);
             let new_color = match blend {
                 true => color.blend_with(old_color),
@@ -177,16 +189,6 @@ impl SurfaceEx {
             };
             *cur = new_color.encode_abgr();
         }
-    }
-
-    fn clamp(max: i32, value: i32) -> i32 {
-        if value < 0 {
-            return 0;
-        }
-        if value > max {
-            return max;
-        }
-        value
     }
 
     pub fn get_width(&self) -> u32 {
@@ -201,47 +203,69 @@ impl SurfaceEx {
         self.surface_ref.get_color_format()
     }
 
-    pub fn draw(&mut self, x: i32, y: i32, width: i32, height: i32, color: RGBA8, blend: bool) {
-        let s_width = self.surface_ref.get_width() as i32;
-        let s_height = self.surface_ref.get_height() as i32;
-        let x0 = Self::clamp(s_width, x);
-        let x1 = Self::clamp(s_width, x + width);
-        let y0 = Self::clamp(s_height, y);
-        let y1 = Self::clamp(s_height, y + height);
+    pub fn draw_rect(&mut self, x: u32, y: u32, width: u32, height: u32, color: RGBA8, blend: bool) {
+        let s_width = self.surface_ref.get_width();
+        let s_height = self.surface_ref.get_height();
+        let x0 = x.clamp(0, s_width);
+        let x1 = (x+width).clamp(0, s_width);
+        let y0 = y.clamp(0, s_height);
+        let y1 = (y+height).clamp(0, s_height);
         for y in y0..y1 {
             for x in x0..x1 {
                 self.draw_single(x, y, color, blend);
             }
         }
     }
+    
+    pub fn draw_font_text(&mut self, font: &FontType, text: impl AsRef<str>, color: RGBA8, size: f32, x: i32, y: i32, blend: bool) {
+        let text = text.as_ref();
+        let position: Point = (x as f32, y as f32).into();
+        let scale = font.pt_to_px_scale(size).unwrap();
+        let font = font.as_scaled(scale);
 
-    fn draw_font_text_impl(&mut self, font: &rusttype::Font, text: &str, color: RGBA8, scale: rusttype::Scale, v_metrics: rusttype::VMetrics, x: i32, y: i32, blend: bool) {
-        let glyphs: Vec<_> = font.layout(&text[..], scale, rusttype::point(0.0, v_metrics.ascent)).collect();
-        for glyph in &glyphs {
-            if let Some(bounding_box) = glyph.pixel_bounding_box() {
-                // Draw the glyph into the image per-pixel by using the draw closure
-                glyph.draw(|g_x, g_y, g_v| {
-                    let mut pix_color = color;
-                    // Different alpha depending on the pixel
-                    pix_color.a = (g_v * 255.0) as u8;
-                    self.draw_single(x + g_x as i32 + bounding_box.min.x as i32, y + g_y as i32 + bounding_box.min.y as i32, pix_color, blend);
+        let v_advance = font.height() + font.line_gap();
+        let mut caret = position + ab_glyph::point(0.0, font.ascent());
+        let mut last_glyph: Option<Glyph> = None;
+        let mut target:Vec<Glyph> =  Vec::new();
+        for c in text.chars() {
+            if c.is_control() {
+                if c == '\n' {
+                    caret = ab_glyph::point(position.x, caret.y + v_advance);
+                    last_glyph = None;
+                }
+                continue;
+            }
+            let mut glyph = font.scaled_glyph(c);
+            if let Some(previous) = last_glyph.take() {
+                caret.x += font.kern(previous.id, glyph.id);
+            }
+            glyph.position = caret;
+
+            last_glyph = Some(glyph.clone());
+            caret.x += font.h_advance(glyph.id);
+
+            if !c.is_whitespace() && caret.x > position.x + self.get_width() as f32 {
+                caret = ab_glyph::point(position.x, caret.y + v_advance);
+                glyph.position = caret;
+                last_glyph = None;
+            }
+
+            target.push(glyph);
+        }
+        
+        for glyph in target {
+            if let Some(outline) = font.outline_glyph(glyph) {
+                let bounds = outline.px_bounds();
+                outline.draw(|d_x, d_y, c| {
+                    let pix_color = RGBA8 {a: (c * 255.0) as u8, ..color};
+                    self.draw_single(bounds.min.x as u32 + d_x, bounds.min.y as u32 + d_y, pix_color, blend);
                 });
             }
         }
     }
-    
-    pub fn draw_font_text(&mut self, font: &rusttype::Font, text: String, color: RGBA8, size: f32, x: i32, y: i32, blend: bool) {
-        let scale = rusttype::Scale::uniform(size);
-        let v_metrics = font.v_metrics(scale);
-        
-        let mut tmp_y = y;
-        for semi_text in text.lines() {
-            self.draw_font_text_impl(font, semi_text, color, scale, v_metrics, x, tmp_y, blend);
-            tmp_y += v_metrics.ascent as i32;
-        }
-    }
 
-    pub fn draw_bitmap_text(&mut self, text: String, color: RGBA8, scale: i32, x: i32, y: i32, blend: bool) {
+    pub fn draw_bitmap_text(&mut self, text: impl AsRef<str>, color: RGBA8, scale: u32, x: u32, y: u32, blend: bool) {
+        let text = text.as_ref();
         let mut tmp_x = x;
         let mut tmp_y = y;
         for c in text.chars() {
@@ -259,7 +283,7 @@ impl SurfaceEx {
                                 match *gx & 1 << bit {
                                     0 => {},
                                     _ => {
-                                        self.draw(tmp_x, tmp_y, scale, scale, color, blend);
+                                        self.draw_rect(tmp_x, tmp_y, scale, scale, color, blend);
                                     },
                                 }
                                 tmp_x += scale;

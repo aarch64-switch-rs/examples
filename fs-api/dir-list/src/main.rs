@@ -35,7 +35,7 @@ pub fn main() -> Result<()> {
     fs::initialize_fspsrv_session()?;
     fs::mount_sd_card("sdmc")?;
 
-    let mut dir = fs::open_directory(String::from("sdmc:/"), fs::DirectoryOpenMode::ReadDirectories() | fs::DirectoryOpenMode::ReadFiles())?;
+    let mut dir = fs::open_directory("sdmc:/", fs::DirectoryOpenMode::ReadDirectories() | fs::DirectoryOpenMode::ReadFiles())?;
     loop {
         if let Ok(Some(dd)) = dir.read_next() {
             diag_log!(LmLogger { LogSeverity::Trace, false } => "- {:?} ({:?})\n", dd.name, dd.entry_type);
@@ -45,7 +45,6 @@ pub fn main() -> Result<()> {
         }
     }
 
-    fs::finalize_fspsrv_session();
     fs::unmount_all();
     Ok(())
 }

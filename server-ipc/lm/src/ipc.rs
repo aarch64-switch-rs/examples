@@ -1,3 +1,5 @@
+use nx::ipc::client::IClientObject;
+use nx::ipc::server::ISessionObject;
 use nx::result::*;
 use nx::mem;
 use nx::ipc::sf;
@@ -7,32 +9,26 @@ use nx::ipc::sf::lm::ILogger;
 use nx::ipc::sf::lm::ILogService;
 use nx::diag::log;
 use nx::service;
+use nx::service::lm::ILogServiceServer;
+use nx::service::lm::ILoggerServer;
 use nx::service::sm;
 use nx::service::pm;
 use nx::service::pm::IInformationInterface;
 use crate::logger;
 
-pub struct Logger {
+pub struct BinaryFileLogger {
     log_destination: lm::LogDestination,
     program_id: u64,
-    dummy_session: sf::Session
+
 }
 
-impl Logger {
+impl BinaryFileLogger {
     pub fn new(program_id: u64) -> Self {
-        Self { log_destination: lm::LogDestination::Tma(), program_id, dummy_session: sf::Session::new() }
+        Self { log_destination: lm::LogDestination::Tma(), program_id }
     }
 }
 
-impl sf::IObject for Logger {
-    ipc_sf_object_impl_default_command_metadata!();
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.dummy_session
-    }
-}
-
-impl ILogger for Logger {
+impl ILoggerServer for BinaryFileLogger {
     fn log(&mut self, log_buf: sf::InAutoSelectBuffer<u8>) -> Result<()> {
         diag_log!(logger::SelfLogger { log::LogSeverity::Trace, false } => "Logging with buffer ({:p}, 0x{:X})", log_buf.get_address(), log_buf.get_size());
 
@@ -50,35 +46,33 @@ impl ILogger for Logger {
     }
 }
 
-pub struct LogService {
-    dummy_session: sf::Session
-}
-
-impl sf::IObject for LogService {
-    ipc_sf_object_impl_default_command_metadata!();
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.dummy_session
+impl ISessionObject for BinaryFileLogger {
+    fn try_handle_request_by_id(&mut self, req_id: u32, protocol: nx::ipc::CommandProtocol, server_ctx: &mut server::ServerContext) -> Option<Result<()>> {
+        <Self as ILoggerServer>::try_handle_request_by_id(self, req_id, protocol, server_ctx)
     }
 }
 
-impl ILogService for LogService {
-    fn open_logger(&mut self, process_id: sf::ProcessId) -> Result<mem::Shared<dyn ILogger>> {
+pub struct LogService;
+
+impl ILogServiceServer for LogService {
+    fn open_logger(&mut self, process_id: u64) -> Result<impl ILoggerServer + 'static + ISessionObject> {
         let pminfo = service::new_service_object::<pm::InformationInterface>()?;
-        let program_id = pminfo.get().get_program_id(process_id.process_id)?;
-        diag_log!(logger::SelfLogger { log::LogSeverity::Trace, false } => "Opening logger for program ID 0x{:016X}", program_id);
+        let program_id = pminfo.get_program_id(process_id)?;
+        diag_log!(logger::SelfLogger { log::LogSeverity::Trace, false } => "Opening logger for program ID 0x{:016X}", program_id.0);
 
-        Ok(mem::Shared::new(Logger::new(program_id)))
+        Ok(BinaryFileLogger::new(program_id.0))
     }
 }
 
-impl server::ISessionObject for LogService {}
+impl server::ISessionObject for LogService {
+    fn try_handle_request_by_id(&mut self, req_id: u32, protocol: nx::ipc::CommandProtocol, server_ctx: &mut server::ServerContext) -> Option<Result<()>> {
+        <Self as ILogServiceServer>::try_handle_request_by_id(self, req_id, protocol, server_ctx)
+    }
+}
 
 impl server::IServerObject for LogService {
     fn new() -> Self {
-        Self {
-            dummy_session: sf::Session::new()
-        }
+        Self
     }
 }
 

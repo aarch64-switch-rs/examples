@@ -8,19 +8,20 @@ use nx::version;
 
 // TODO: move this interface to nx libs (and finish it)...
 
+ipc_sf_define_default_interface_client!(PrepoService);
 ipc_sf_define_interface_trait! {
-    trait IPrepoService {
-        save_report_old [10100, version::VersionInterval::all()]: (process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => ();
-        save_report_with_user_old [10101, version::VersionInterval::all()]: (user_id: u128, process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => ();
-        save_report_old_2 [10102, version::VersionInterval::all()]: (process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => ();
-        save_report_with_user_old_2 [10103, version::VersionInterval::all()]: (user_id: u128, process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => ();
-        save_report [10104, version::VersionInterval::all()]: (process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => ();
-        save_report_with_user [10105, version::VersionInterval::all()]: (user_id: u128, process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => ();
-        request_immediate_transmission [10200, version::VersionInterval::all()]: () => ();
-        get_transmission_status [10300, version::VersionInterval::all()]: () => (status: u32);
-        get_system_session_id [10400, version::VersionInterval::all()]: () => (id: u64);
-        save_system_report [20100, version::VersionInterval::all()]: (application_id: u64, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => ();
-        save_system_report_with_user [20101, version::VersionInterval::all()]: (user_id: u128, application_id: u64, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => ();
+	trait PrepoService {
+        save_report_old [10100, version::VersionInterval::all(), mut ]: (process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
+        save_report_with_user_old [10101, version::VersionInterval::all(), mut ]: (user_id: u128, process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
+        save_report_old_2 [10102, version::VersionInterval::all(), mut ]: (process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
+        save_report_with_user_old_2 [10103, version::VersionInterval::all(), mut ]: (user_id: u128, process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
+        save_report [10104, version::VersionInterval::all(), mut ]: (process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
+        save_report_with_user [10105, version::VersionInterval::all(), mut ]: (user_id: u128, process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
+        request_immediate_transmission [10200, version::VersionInterval::all(), mut ]: () => () ();
+        get_transmission_status [10300, version::VersionInterval::all(), mut ]: () => (status: u32) (status: u32);
+        get_system_session_id [10400, version::VersionInterval::all(), mut ]: () => (id: u64) (id: u64);
+        save_system_report [20100, version::VersionInterval::all(), mut ]: (application_id: u64, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
+        save_system_report_with_user [20101, version::VersionInterval::all(), mut ]: (user_id: u128, application_id: u64, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
     }
 }
 
@@ -62,22 +63,21 @@ pub struct ReportContext {
     pub user_id: Option<u128>
 }
 
-pub struct PrepoService<const S: u32> {
-    _info: sm::mitm::MitmProcessInfo,
-    dummy_session: sf::Session
+pub struct PrepoServiceMitmServer<const S: u32> {
+    _info: sm::mitm::MitmProcessInfo
 }
 
-impl<const S: u32> PrepoService<S> {
+impl<const S: u32> PrepoServiceMitmServer<S> {
     fn process_report(&self, ctx: ReportContext) {
         let mut idx = 1;
         let mut msgpack_path = format!("sdmc:/prepo/{:#X}-{:#X}-{:?}.msgpack", ctx.process_id.unwrap_or(0), ctx.application_id.unwrap_or(0), ctx.kind);
-        while fs::get_entry_type(msgpack_path.clone()).is_ok() {
+        while fs::get_entry_type(msgpack_path.as_str()).is_ok() {
             msgpack_path = format!("sdmc:/prepo/{:#X}-{:#X}-{:?}-{}.msgpack", ctx.process_id.unwrap_or(0), ctx.application_id.unwrap_or(0), ctx.kind, idx);
             idx += 1;
         }
 
-        if let Ok(mut msgpack_file) = fs::open_file(msgpack_path, fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append()) {
-            msgpack_file.write_array(ctx.report_msgpack_buf.get_slice()).unwrap();
+        if let Ok(mut msgpack_file) = fs::open_file(msgpack_path.as_str(), fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append()) {
+            msgpack_file.write_array(unsafe {ctx.report_msgpack_buf.get_slice()}).unwrap();
         }
 
         diag_log!(LmLogger { LogSeverity::Info, true } => "\nREPORT START\n");
@@ -153,15 +153,7 @@ impl<const S: u32> PrepoService<S> {
     }
 }
 
-impl<const S: u32> sf::IObject for PrepoService<S> {
-    ipc_sf_object_impl_default_command_metadata!();
-
-    fn get_session(&mut self) -> &mut sf::Session {
-        &mut self.dummy_session
-    }
-}
-
-impl<const S: u32> IPrepoService for PrepoService<S> {
+impl<const S: u32> IPrepoServiceServer for PrepoServiceMitmServer<S> {
     fn save_report_old(&mut self, process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) -> Result<()> {
         self.save_report_impl(process_id, room_str_buf, report_msgpack_buf)
     }
@@ -210,19 +202,22 @@ impl<const S: u32> IPrepoService for PrepoService<S> {
     }
 }
 
-impl<const S: u32> server::ISessionObject for PrepoService<S> {}
+impl<const S: u32> server::ISessionObject for PrepoServiceMitmServer<S> {
+    fn try_handle_request_by_id(&mut self, req_id: u32, protocol: nx::ipc::CommandProtocol, server_ctx: &mut server::ServerContext) -> Option<Result<()>> {
+        <Self as IPrepoServiceServer>::try_handle_request_by_id(self, req_id, protocol, server_ctx)
+    }
+}
 
-impl<const S: u32> server::IMitmServerObject for PrepoService<S> {
+impl<const S: u32> server::IMitmServerObject for PrepoServiceMitmServer<S> {
     fn new(info: sm::mitm::MitmProcessInfo) -> Self {
-        diag_log!(LmLogger { LogSeverity::Info, true } => "Opened '{}' from program {:#X}\n", get_non_null_service_name::<S>(), info.program_id);
+        diag_log!(LmLogger { LogSeverity::Info, true } => "Opened '{}' from program {:#X}\n", get_non_null_service_name::<S>(), info.program_id.0);
         Self {
-            _info: info,
-            dummy_session: sf::Session::new()
+            _info: info
         }
     }
 }
 
-impl<const S: u32> server::IMitmService for PrepoService<S> {
+impl<const S: u32> server::IMitmService for PrepoServiceMitmServer<S> {
     fn get_name() -> sm::ServiceName {
         let name = get_service_name::<S>();
         diag_log!(LmLogger { LogSeverity::Info, true } => "Registering mitm at service '{}'...\n", get_non_null_service_name::<S>());

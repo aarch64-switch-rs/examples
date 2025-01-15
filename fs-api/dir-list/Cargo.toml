@@ -5,7 +5,7 @@ authors = ["XorTroll"]
 edition = "2021"
 
 [dependencies]
-nx = { git = "https://github.com/aarch64-switch-rs/nx", features = [ "fs" ] }
+nx = {  workspace = true, features = [ "input", "gpu", "fs" ] }
 
 [package.metadata.nx.nro]
 nacp = { default_name = "dir-list", default_author = "XorTroll", version = "Example" }

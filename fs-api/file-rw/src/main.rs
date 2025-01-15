@@ -33,15 +33,14 @@ pub fn main() -> Result<()> {
     fs::initialize_fspsrv_session()?;
     fs::mount_sd_card("sdmc")?;
 
-    let mut hbmenu_nro = fs::open_file(String::from("sdmc:/hbmenu.nro"), fs::FileOpenOption::Read())?;
-    hbmenu_nro.seek(0x10, fs::Whence::Current)?; // Skip NRO start (https://switchbrew.org/wiki/NRO)
+    let mut hbmenu_nro = fs::open_file("sdmc:/hbmenu.nro", fs::FileOpenOption::Read())?;
+    hbmenu_nro.seek(fs::SeekFrom::Start(0x10))?; // Skip NRO start (https://switchbrew.org/wiki/NRO)
     let nro_magic: u32 = hbmenu_nro.read_val()?;
 
     let nro_magic_msg = format!("hbmenu NRO magic: {:#X}", nro_magic);
-    let mut log_file = fs::open_file(String::from("sdmc:/fs-test-log.log"), fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append())?;
+    let mut log_file = fs::open_file("sdmc:/fs-test-log.log", fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append())?;
     log_file.write_array(nro_magic_msg.as_bytes())?;
 
-    fs::finalize_fspsrv_session();
     fs::unmount_all();
     Ok(())
 }
