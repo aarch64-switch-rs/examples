@@ -3,15 +3,13 @@
 
 #[macro_use]
 extern crate alloc;
-use alloc::string::String;
 
-extern crate nx;
-use nx::fs;
-use nx::svc;
-use nx::result::*;
-use nx::util;
 use nx::diag::abort;
 use nx::diag::log::lm::LmLogger;
+use nx::fs;
+use nx::result::*;
+use nx::svc;
+use nx::util;
 
 use core::panic;
 
@@ -19,8 +17,7 @@ use core::panic;
 pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     if hbl_heap.is_valid() {
         hbl_heap
-    }
-    else {
+    } else {
         let heap_size: usize = 0x10000000;
         let heap_address = svc::set_heap_size(heap_size).unwrap();
         util::PointerAndSize::new(heap_address, heap_size)
@@ -38,7 +35,10 @@ pub fn main() -> Result<()> {
     let nro_magic: u32 = hbmenu_nro.read_val()?;
 
     let nro_magic_msg = format!("hbmenu NRO magic: {:#X}", nro_magic);
-    let mut log_file = fs::open_file("sdmc:/fs-test-log.log", fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append())?;
+    let mut log_file = fs::open_file(
+        "sdmc:/fs-test-log.log",
+        fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append(),
+    )?;
     log_file.write_array(nro_magic_msg.as_bytes())?;
 
     fs::unmount_all();

@@ -9,16 +9,15 @@ extern crate alloc;
 
 extern crate paste;
 
-use nx::result::*;
-use nx::util;
-use nx::fs;
-use nx::thread;
-use nx::diag::abort;
-use nx::diag::log::{lm::LmLogger, LogSeverity};
-use nx::ipc::server;
-use nx::version;
 use core::panic;
 use core::ptr::addr_of_mut;
+use nx::diag::abort;
+use nx::diag::log::{lm::LmLogger, LogSeverity};
+use nx::fs;
+use nx::ipc::server;
+use nx::result::*;
+use nx::util;
+use nx::version;
 
 mod prepo;
 
@@ -26,10 +25,9 @@ const CUSTOM_HEAP_SIZE: usize = 0x4000;
 static mut CUSTOM_HEAP: [u8; CUSTOM_HEAP_SIZE] = [0; CUSTOM_HEAP_SIZE];
 
 #[no_mangle]
+#[allow(static_mut_refs)] // :(
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
-    unsafe {
-        util::PointerAndSize::new(addr_of_mut!(CUSTOM_HEAP) as _, CUSTOM_HEAP_SIZE)
-    }
+    util::PointerAndSize::new(addr_of_mut!(CUSTOM_HEAP) as _, CUSTOM_HEAP_SIZE)
 }
 
 const POINTER_BUF_SIZE: usize = 0x1000;
@@ -54,8 +52,7 @@ pub fn main() -> Result<()> {
     if version::get_version() > version::Version::new(5, 1, 0) {
         // 6.0.0 -> (...) has "prepo:a2"
         manager.register_mitm_service_server::<prepo::PrepoServiceMitmServer<{ prepo::SERVICE_TYPE_ADMIN2 }>>()?;
-    }
-    else {
+    } else {
         // 1.0.0 -> 5.1.0 has "prepo:a"
         manager.register_mitm_service_server::<prepo::PrepoServiceMitmServer<{ prepo::SERVICE_TYPE_ADMIN }>>()?;
     }

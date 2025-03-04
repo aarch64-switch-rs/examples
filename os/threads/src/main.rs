@@ -4,13 +4,13 @@
 #[macro_use]
 extern crate alloc;
 
-use nx::diag_log;
-use nx::thread;
-use nx::svc;
-use nx::result::*;
-use nx::util;
 use nx::diag::abort;
 use nx::diag::log::{lm::LmLogger, LogSeverity};
+use nx::diag_log;
+use nx::result::*;
+use nx::svc;
+use nx::thread;
+use nx::util;
 
 use core::panic;
 
@@ -18,8 +18,7 @@ use core::panic;
 pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     if hbl_heap.is_valid() {
         hbl_heap
-    }
-    else {
+    } else {
         let heap_size: usize = 0x10000000;
         let heap_address = svc::set_heap_size(heap_size).unwrap();
         util::PointerAndSize::new(heap_address, heap_size)
@@ -51,10 +50,9 @@ pub fn main() -> Result<()> {
         }
     });
 
-
-    t1.join();
-    t2.join();
-    t3.join();
+    let _ = t1.join();
+    let _ = t2.join();
+    let _ = t3.join();
 
     diag_log!(LmLogger { LogSeverity::Trace, false } => "Done!\n");
 

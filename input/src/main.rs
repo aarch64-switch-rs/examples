@@ -5,13 +5,13 @@ extern crate nx;
 
 extern crate alloc;
 
-use nx::result::*;
-use nx::util;
-use nx::svc;
-use nx::input;
-use nx::service::hid;
 use nx::diag::abort;
 use nx::diag::log::lm::LmLogger;
+use nx::input;
+use nx::result::*;
+use nx::service::hid;
+use nx::svc;
+use nx::util;
 
 use core::panic;
 
@@ -19,8 +19,7 @@ use core::panic;
 pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     if hbl_heap.is_valid() {
         hbl_heap
-    }
-    else {
+    } else {
         let heap_size: usize = 0x10000000;
         let heap_address = svc::set_heap_size(heap_size).unwrap();
         util::PointerAndSize::new(heap_address, heap_size)
@@ -30,7 +29,11 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 #[no_mangle]
 pub fn main() -> Result<()> {
     // Support all basic controller styles (pro-controller, handheld and joy-cons in single and dual modes)
-    let supported_style_tags = hid::NpadStyleTag::FullKey() | hid::NpadStyleTag::Handheld() | hid::NpadStyleTag::JoyDual() | hid::NpadStyleTag::JoyLeft() | hid::NpadStyleTag::JoyRight();
+    let supported_style_tags = hid::NpadStyleTag::FullKey()
+        | hid::NpadStyleTag::Handheld()
+        | hid::NpadStyleTag::JoyDual()
+        | hid::NpadStyleTag::JoyLeft()
+        | hid::NpadStyleTag::JoyRight();
 
     let input_ctx = input::Context::new(supported_style_tags, 1)?;
 

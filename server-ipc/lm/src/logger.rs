@@ -1,20 +1,15 @@
-use nx::result::*;
+use core::sync::atomic::AtomicBool;
+
+use alloc::string::String;
 use nx::arm;
-use nx::sync;
 use nx::diag::log;
 use nx::fs;
+use nx::result::*;
 use nx::thread;
-use alloc::string::String;
 
 const BASE_LOG_DIR: &'static str = "sdmc:/lm-binlogs";
 
-static mut G_ENABLED: sync::Mutex<bool> = sync::Mutex::new(true);
-
-pub fn set_log_enabled(enabled: bool) {
-    unsafe {
-        G_ENABLED.set(enabled);
-    }
-}
+pub static G_ENABLED: AtomicBool = AtomicBool::new(true);
 
 const LOG_BINARY_HEADER_MAGIC: u32 = 0x70687068;
 const CURRENT_VERSION: u32 = 1;
@@ -23,12 +18,15 @@ const CURRENT_VERSION: u32 = 1;
 #[repr(C)]
 pub struct LogBinaryHeader {
     magic: u32,
-    version: u32
+    version: u32,
 }
 
 impl LogBinaryHeader {
     pub const fn new(magic: u32, version: u32) -> Self {
-        Self { magic: magic, version: version }
+        Self {
+            magic: magic,
+            version: version,
+        }
     }
 }
 
@@ -37,15 +35,26 @@ pub fn initialize() -> Result<()> {
     fs::create_directory(BASE_LOG_DIR)
 }
 
-fn log_packet_buf_impl(packet_buf: *const u8, packet_buf_size: usize, bin_header: LogBinaryHeader, log_dir: String, log_buf_file: String) -> Result<()> {
+fn log_packet_buf_impl(
+    packet_buf: *const u8,
+    packet_buf_size: usize,
+    bin_header: LogBinaryHeader,
+    log_dir: String,
+    log_buf_file: String,
+) -> Result<()> {
     unsafe {
-        if G_ENABLED.get_val() {
+        if G_ENABLED.load(core::sync::atomic::Ordering::Relaxed) {
             let _ = fs::create_directory(BASE_LOG_DIR);
             let _ = fs::create_directory(log_dir.as_str());
 
             let _ = fs::remove_file(log_buf_file.as_str());
 
-            let mut log_file = fs::open_file(log_buf_file.as_str(), fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append())?;
+            let mut log_file = fs::open_file(
+                log_buf_file.as_str(),
+                fs::FileOpenOption::Create()
+                    | fs::FileOpenOption::Write()
+                    | fs::FileOpenOption::Append(),
+            )?;
             log_file.write_val(&bin_header)?;
             log_file.write_array(core::slice::from_raw_parts(packet_buf, packet_buf_size))?;
         }
@@ -54,14 +63,17 @@ fn log_packet_buf_impl(packet_buf: *const u8, packet_buf_size: usize, bin_header
 }
 
 fn log_self_impl(self_msg: String, log_dir: String, log_buf_file: String) -> Result<()> {
-    unsafe {
-        if G_ENABLED.get_val() {
-            let _ = fs::create_directory(BASE_LOG_DIR);
-            let _ = fs::create_directory(log_dir.as_str());
+    if G_ENABLED.load(core::sync::atomic::Ordering::Relaxed) {
+        let _ = fs::create_directory(BASE_LOG_DIR);
+        let _ = fs::create_directory(log_dir.as_str());
 
-            let mut log_file = fs::open_file(log_buf_file.as_str(), fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append())?;
-            log_file.write_array(self_msg.as_bytes())?;
-        }
+        let mut log_file = fs::open_file(
+            log_buf_file.as_str(),
+            fs::FileOpenOption::Create()
+                | fs::FileOpenOption::Write()
+                | fs::FileOpenOption::Append(),
+        )?;
+        log_file.write_array(self_msg.as_bytes())?;
     }
     Ok(())
 }
@@ -71,7 +83,13 @@ pub fn log_packet_buf(packet_buf: *const u8, packet_buf_size: usize, program_id:
     let process_log_dir = format!("{}/0x{:016X}", BASE_LOG_DIR, program_id);
     let log_buf_path = format!("{}/0x{:016X}.nxbinlog", process_log_dir, log_timestamp);
 
-    let _ = log_packet_buf_impl(packet_buf, packet_buf_size, LogBinaryHeader::new(LOG_BINARY_HEADER_MAGIC, CURRENT_VERSION), process_log_dir, log_buf_path);
+    let _ = log_packet_buf_impl(
+        packet_buf,
+        packet_buf_size,
+        LogBinaryHeader::new(LOG_BINARY_HEADER_MAGIC, CURRENT_VERSION),
+        process_log_dir,
+        log_buf_path,
+    );
 }
 
 pub fn log_self(self_msg: String) {
@@ -98,7 +116,16 @@ impl log::Logger for SelfLogger {
             log::LogSeverity::Error => "Error",
             log::LogSeverity::Fatal => "Fatal",
         };
-        let msg = format!("[ SelfLog (severity: {}, verbosity: {}) from {} in thread {}, at {}:{} ] {}\n", severity_str, metadata.verbosity, metadata.fn_name, thread::get_current_thread_name(), metadata.file_name, metadata.line_number, metadata.msg);
+        let msg = format!(
+            "[ SelfLog (severity: {}, verbosity: {}) from {} in thread {}, at {}:{} ] {}\n",
+            severity_str,
+            metadata.verbosity,
+            metadata.fn_name,
+            thread::get_current_thread_name(),
+            metadata.file_name,
+            metadata.line_number,
+            metadata.msg
+        );
         log_self(msg);
     }
 }

@@ -9,13 +9,13 @@ extern crate alloc;
 
 extern crate paste;
 
-use nx::result::*;
-use nx::util;
 use nx::diag::abort;
 use nx::diag::log::{lm::LmLogger, LogSeverity};
-use nx::ipc::sf;
 use nx::ipc::server;
+use nx::ipc::sf;
+use nx::result::*;
 use nx::service::sm;
+use nx::util;
 
 use simple_service_server::IDemoServiceServer;
 
@@ -25,18 +25,29 @@ use core::ptr::addr_of_mut;
 pub struct DemoServiceServer;
 
 impl IDemoServiceServer for DemoServiceServer {
-    fn sample_command(&mut self, a: u32, b: u64, c: sf::InAutoSelectBuffer<u8>, d: sf::OutAutoSelectBuffer<u8>) -> Result<()> {
+    fn sample_command(
+        &mut self,
+        a: u32,
+        b: u64,
+        c: sf::InAutoSelectBuffer<u8>,
+        d: sf::OutAutoSelectBuffer<u8>,
+    ) -> Result<()> {
         diag_log!(LmLogger { LogSeverity::Trace, true } => "a: {}", a);
         diag_log!(LmLogger { LogSeverity::Trace, true } => "b: {}", b);
         diag_log!(LmLogger { LogSeverity::Trace, true } => "c len: {}", c.get_string().len());
         diag_log!(LmLogger { LogSeverity::Trace, true } => "d len: {}", d.get_string().len());
-        
+
         Ok(())
     }
 }
 
 impl server::ISessionObject for DemoServiceServer {
-    fn try_handle_request_by_id(&mut self, req_id: u32, protocol: nx::ipc::CommandProtocol, server_ctx: &mut server::ServerContext) -> Option<Result<()>> {
+    fn try_handle_request_by_id(
+        &mut self,
+        req_id: u32,
+        protocol: nx::ipc::CommandProtocol,
+        server_ctx: &mut server::ServerContext,
+    ) -> Option<Result<()>> {
         <Self as IDemoServiceServer>::try_handle_request_by_id(self, req_id, protocol, server_ctx)
     }
 }
@@ -62,9 +73,7 @@ static mut CUSTOM_HEAP: [u8; CUSTOM_HEAP_LEN] = [0; CUSTOM_HEAP_LEN];
 
 #[no_mangle]
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
-    unsafe {
-        util::PointerAndSize::new(addr_of_mut!(CUSTOM_HEAP) as _, CUSTOM_HEAP_LEN)
-    }
+    util::PointerAndSize::new(addr_of_mut!(CUSTOM_HEAP) as _, CUSTOM_HEAP_LEN)
 }
 
 #[no_mangle]

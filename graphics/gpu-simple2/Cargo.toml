@@ -1,0 +1,12 @@
+[package]
+name = "gpu-simple2"
+version = "0.1.0"
+authors = ["XorTroll"]
+edition = "2021"
+
+[dependencies]
+num-traits = { version = "0.2.19", default-features = false, features = ["libm"] }
+nx = { workspace = true, features = [ "input", "truetype", "fs" ] }
+
+[package.metadata.nx.nro]
+nacp = { default_name = "gpu-simple2", default_author = "XorTroll", version = "Example" }

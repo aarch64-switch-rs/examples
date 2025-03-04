@@ -1,23 +1,17 @@
 #![no_std]
 #![no_main]
 
-#[macro_use]
-extern crate nx;
-
-#[macro_use]
 extern crate alloc;
 
 extern crate paste;
 
-use nx::result::*;
-use nx::util;
 use nx::diag::abort;
-use nx::diag::log::{lm::LmLogger, LogSeverity};
-use nx::service::sm;
-use nx::ipc::sf;
+use nx::diag::log::lm::LmLogger;
 use nx::ipc::server;
-use nx::version;
+use nx::result::*;
 use nx::service::psm::IPsmServerServer;
+use nx::service::sm;
+use nx::util;
 
 use core::panic;
 use core::ptr::addr_of_mut;
@@ -31,7 +25,12 @@ impl IPsmServerServer for PsmMitmServer {
 }
 
 impl server::ISessionObject for PsmMitmServer {
-    fn try_handle_request_by_id(&mut self, req_id: u32, protocol: nx::ipc::CommandProtocol, server_ctx: &mut server::ServerContext) -> Option<Result<()>> {
+    fn try_handle_request_by_id(
+        &mut self,
+        req_id: u32,
+        protocol: nx::ipc::CommandProtocol,
+        server_ctx: &mut server::ServerContext,
+    ) -> Option<Result<()>> {
         <Self as IPsmServerServer>::try_handle_request_by_id(self, req_id, protocol, server_ctx)
     }
 }
@@ -56,10 +55,9 @@ pub const CUSTOM_HEAP_SIZE: usize = 0x40000;
 static mut CUSTOM_HEAP: [u8; CUSTOM_HEAP_SIZE] = [0; CUSTOM_HEAP_SIZE];
 
 #[no_mangle]
+#[allow(static_mut_refs)] // :(
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
-    unsafe {
-        util::PointerAndSize::new(addr_of_mut!(CUSTOM_HEAP) as _, CUSTOM_HEAP.len())
-    }
+    unsafe { util::PointerAndSize::new(addr_of_mut!(CUSTOM_HEAP) as _, CUSTOM_HEAP.len()) }
 }
 
 const POINTER_BUF_SIZE: usize = 0;

@@ -4,13 +4,8 @@ version = "0.1.0"
 authors = ["XorTroll"]
 edition = "2021"
 
-
-[profile.release]
-debug = true
-
 [dependencies]
-nx = { workspace = true , features = [ "input", "gpu", "fs" ] }
-ui2d = { path = "../ui2d" }
+nx = { workspace = true , features = [ "input", "canvas", "truetype" ] }
 
 [package.metadata.nx.nro]
 nacp = { default_name = "gpu-simple", default_author = "XorTroll", version = "Example" }

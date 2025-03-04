@@ -7,18 +7,14 @@ extern crate nx;
 #[macro_use]
 extern crate alloc;
 
-use nx::service::psm::PsmServer;
-use nx::svc;
-use nx::result::*;
-use nx::util;
 use nx::diag::abort;
 use nx::diag::log::{lm::LmLogger, LogSeverity};
+use nx::result::*;
 use nx::service;
-use nx::ipc::sf;
-use nx::ipc::client;
-use nx::service::sm;
-use nx::version;
 use nx::service::psm::IPsmServer;
+use nx::service::psm::PsmServer;
+use nx::svc;
+use nx::util;
 
 use core::panic;
 
@@ -26,8 +22,7 @@ use core::panic;
 pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     if hbl_heap.is_valid() {
         hbl_heap
-    }
-    else {
+    } else {
         let heap_size: usize = 0x10000000;
         let heap_address = svc::set_heap_size(heap_size).unwrap();
         util::PointerAndSize::new(heap_address, heap_size)

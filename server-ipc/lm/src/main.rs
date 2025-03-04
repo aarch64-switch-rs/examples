@@ -9,20 +9,20 @@ extern crate alloc;
 
 extern crate paste;
 
-use nx::result::*;
-use nx::service::psc::IPmModule;
-use nx::util;
-use nx::wait;
-use nx::thread;
-use nx::diag::abort;
-use nx::ipc::sf;
-use nx::ipc::server;
-use nx::service;
-use nx::service::psc;
-use nx::service::psc::IPmService;
-use nx::fs;
 use core::panic;
 use core::ptr::addr_of_mut;
+use nx::diag::abort;
+use nx::fs;
+use nx::ipc::server;
+use nx::ipc::sf;
+use nx::result::*;
+use nx::service;
+use nx::service::psc;
+use nx::service::psc::IPmModule;
+use nx::service::psc::IPmService;
+use nx::thread;
+use nx::util;
+use nx::wait;
 
 rrt0_define_default_module_name!();
 
@@ -33,10 +33,9 @@ const CUSTOM_HEAP_SIZE: usize = 0x8000;
 static mut CUSTOM_HEAP: [u8; CUSTOM_HEAP_SIZE] = [0; CUSTOM_HEAP_SIZE];
 
 #[no_mangle]
+#[allow(static_mut_refs)] // :(
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
-    unsafe {
-        util::PointerAndSize::new(addr_of_mut!(CUSTOM_HEAP) as _, CUSTOM_HEAP_SIZE)
-    }
+    util::PointerAndSize::new(addr_of_mut!(CUSTOM_HEAP) as _, CUSTOM_HEAP_SIZE)
 }
 
 pub fn pm_module_main() -> Result<()> {
@@ -49,8 +48,10 @@ pub fn pm_module_main() -> Result<()> {
 
         let (state, _flags) = module.get_request()?;
         match state {
-            psc::State::FullAwake | psc::State::MinimumAwake | psc::State::EssentialServicesAwake => logger::set_log_enabled(true),
-            _ => logger::set_log_enabled(false)
+            psc::State::FullAwake
+            | psc::State::MinimumAwake
+            | psc::State::EssentialServicesAwake => logger::G_ENABLED.store(true, core::sync::atomic::Ordering::Relaxed),
+            _ => logger::G_ENABLED.store(false, core::sync::atomic::Ordering::Relaxed),
         };
 
         module.acknowledge_ex(state)?;
@@ -71,13 +72,18 @@ pub fn main() -> Result<()> {
     fs::mount_sd_card("sdmc")?;
     logger::initialize()?;
 
-    let pm_module_thread = thread::Builder::new().name("lm.PmModule").stack_size(0x2000).spawn(|| {pm_module_main()})?;
+    let pm_module_thread = thread::Builder::new()
+        .name("lm.PmModule")
+        .stack_size(0x2000)
+        .spawn(|| pm_module_main())?;
 
     let mut manager = Manager::new()?;
     manager.register_service_server::<ipc::LogService>()?;
     manager.loop_process()?;
 
-    pm_module_thread.join().expect("PmModule thread panicked.")?;
+    pm_module_thread
+        .join()
+        .expect("PmModule thread panicked.")?;
 
     fs::unmount_all();
     Ok(())

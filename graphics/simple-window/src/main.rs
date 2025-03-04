@@ -2,35 +2,44 @@
 #![no_main]
 
 extern crate alloc;
-use alloc::format;
 
-extern crate nx;
+use ::alloc::format;
+
+use alloc::sync::Arc;
+use nx::diag::abort;
+use nx::fs::FileOpenOption;
+use nx::gpu::canvas::Canvas as _;
+use nx::gpu::{BlockLinearHeights, SCREEN_HEIGHT, SCREEN_WIDTH};
+use nx::input;
 use nx::ipc::sf::AppletResourceUserId;
 use nx::result::*;
-use nx::util;
-use nx::diag::abort;
-use nx::diag::log::lm::LmLogger;
-use nx::gpu;
-use nx::service::vi;
 use nx::service::hid;
-use nx::input;
+use nx::service::vi::LayerFlags;
+use nx::sync::RwLock;
+use nx::{fs, gpu};
 
 use core::panic;
-use core::sync::atomic::AtomicBool;
 
-extern crate ui2d;
-
+/*
 // We're using 8MB of heap
 const CUSTOM_HEAP_LEN: usize = 0x800000;
 static mut CUSTOM_HEAP: [u8; CUSTOM_HEAP_LEN] = [0; CUSTOM_HEAP_LEN];
 
-#[no_mangle]
-#[allow(static_mut_refs)]
+#[unsafe(no_mangle)]
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
-    unsafe {
-        util::PointerAndSize::new(CUSTOM_HEAP.as_mut_ptr(), CUSTOM_HEAP.len())
-    }
+    unsafe { util::PointerAndSize::new(&raw mut CUSTOM_HEAP as *mut _, CUSTOM_HEAP.len()) }
 }
+*/
+static LOG_PATH: &str = "sdmc:/fs-test-log.log";
+
+type RGBType = nx::gpu::canvas::RGBA4;
+const WIDTH: u32 = 255;
+const HEIGHT: u32 = 255;
+const BLOCK_HEIGHT_CONFIG: BlockLinearHeights = gpu::BlockLinearHeights::FourGobs;
+const BUFFER_COUNT: u32 = 2;
+
+//#[no_mangle]
+//static HEAP_SIZE: usize = CanvasManager::<RGBType>::total_heap_required(WIDTH, HEIGHT, BLOCK_HEIGHT_CONFIG, BUFFER_COUNT);
 
 /*
 fn draw_circle(surface: &mut ui2d::SurfaceEx, x: i32, y: i32, radius: u32, color: ui2d::RGBA8, blend: bool) {
@@ -45,59 +54,109 @@ fn draw_circle(surface: &mut ui2d::SurfaceEx, x: i32, y: i32, radius: u32, color
 }
 */
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub fn main() -> Result<()> {
-    let wait = AtomicBool::new(true);
-    while wait.load(core::sync::atomic::Ordering::Relaxed) {
-        let _ = nx::thread::sleep(100_000);
-    }
+    fs::initialize_fspsrv_session()?;
+    fs::mount_sd_card("sdmc")?;
 
-    let mut gpu_ctx = gpu::Context::new(gpu::NvDrvServiceKind::Applet, gpu::ViServiceKind::Manager, 0x40000)?;
+    let mut file = fs::open_file(
+        LOG_PATH,
+        FileOpenOption::Create() | FileOpenOption::Write() | FileOpenOption::Append(),
+    )?;
 
-    let supported_tags = hid::NpadStyleTag::Handheld();
-    let input_ctx = input::Context::new(supported_tags, 1)?;
+    let gpu_ctx = Arc::new(RwLock::new(
+        match gpu::Context::new(
+            gpu::NvDrvServiceKind::Applet,
+            gpu::ViServiceKind::Manager,
+            0x40000,
+        ) {
+            Ok(ok) => ok,
+            Err(e) => {
+                let _ = file.write_array(format!("Error getting gpu context: {}\n", e).as_bytes());
+                return Ok(());
+            }
+        },
+    ));
 
-    let width: u32 = 200;
-    let height: u32 = 200;
-    let x = 0.0;//((1280 - width) / 2) as f32;
-    let y = 0.0;//((720 - height) / 2) as f32;
-    let color_fmt = gpu::ColorFormat::A8B8G8R8;
+    let supported_tags =
+        hid::NpadStyleTag::Handheld() | hid::NpadStyleTag::FullKey() | hid::NpadStyleTag::JoyDual();
+    let input_ctx = match input::Context::new(supported_tags, 1) {
+        Ok(ok) => ok,
+        Err(e) => {
+            let _ = file.write_array(format!("Error getting input context: {}\n", e).as_bytes());
+            return Ok(());
+        }
+    };
 
-    let c_empty = ui2d::RGBA8::new_rgba(0, 0, 0, 0);
-    let c_white = ui2d::RGBA8::new_rgb(0xFF, 0xFF, 0xFF);
-    let c_black = ui2d::RGBA8::new_rgb(0, 0, 0);
-    let c_royal_blue = ui2d::RGBA8::new_rgb(65, 105, 225);
+    let x = (SCREEN_WIDTH - WIDTH) / 2;
+    let y = (SCREEN_HEIGHT - HEIGHT) / 2;
 
-    let font = ui2d::FontType::try_from_slice(include_bytes!("../../font/Roboto-Medium.ttf")).unwrap();
+    let _c_empty = RGBType::new_scaled(0, 0, 0, 0);
+    let _c_white = RGBType::new_scaled(0xFF, 0xFF, 0xFF, 0xFF);
+    let _c_black = RGBType::new_scaled(0, 0, 0, 0xFF);
+    let _c_royal_blue = RGBType::new_scaled(65, 105, 225, 0xFF);
 
     let mut layer_visible = true;
-    let gpu_ctx = gpu_ctx.create_managed_layer_surface("Default", AppletResourceUserId::from_global(), vi::LayerFlags::None(), x, y, width, height, Default::default(), gpu::LayerZ::Max, 2, color_fmt, gpu::PixelFormat::RGBA_8888)?;
-    let mut surface = ui2d::SurfaceEx::from(gpu_ctx);
+    let mut surface = match nx::gpu::canvas::CanvasManager::new_managed(
+        gpu_ctx,
+        None,
+        x,
+        y,
+        gpu::LayerZ::Max,
+        WIDTH,
+        HEIGHT,
+        AppletResourceUserId::new(0),
+        LayerFlags::None(),
+        BUFFER_COUNT,
+        BLOCK_HEIGHT_CONFIG,
+    ) {
+        Ok(ok) => ok,
+        Err(e) => {
+            let _ = file.write_array(format!("Error getting surface: {}\n", e).as_bytes());
+            return Ok(());
+        }
+    };
 
     'render: loop {
-        for controller in [hid::NpadIdType::Handheld, hid::NpadIdType::No1].iter().cloned() {
+        for controller in [hid::NpadIdType::Handheld, hid::NpadIdType::No1]
+            .iter()
+            .cloned()
+        {
             let mut p_handheld = input_ctx.get_player(controller);
 
             let buttons_down = p_handheld.get_buttons_down();
             if buttons_down.contains(hid::NpadButton::X()) {
                 layer_visible = !layer_visible;
-            }
-            else if buttons_down.contains(hid::NpadButton::Plus()) {
+                if let Err(e) = surface.surface.set_visible(layer_visible) {
+                    let _ = file.write_array(
+                        format!(
+                            "Error setting surface visibility to {}: {}\n",
+                            layer_visible, e
+                        )
+                        .as_bytes(),
+                    );
+                }
+            } else if buttons_down.contains(hid::NpadButton::Plus()) {
                 // Exit if Plus/+ is pressed.
                 break 'render;
             }
         }
-        
-        surface.start()?;
-        if layer_visible {
-            surface.clear(c_white);
-            surface.draw_font_text(&font, "Hello!", c_black, 25.0, 0, 10, true);
-            surface.draw_bitmap_text("Hello bmt!", c_royal_blue, 2, 0, 50, true);
-        }
-        else {
-            surface.clear(c_empty);
-        }
-        surface.end()?;
+
+        let _ = surface.render_unbuffered(None, |canvas| {
+            for y in 0..canvas.height() {
+                for x in 0..canvas.width() {
+                    canvas.draw_single(
+                        x as i32,
+                        y as i32,
+                        RGBType::new_scaled(x as u8, y as u8, 0, 0xff),
+                        gpu::canvas::AlphaBlend::None,
+                    );
+                }
+            }
+
+            Ok(())
+        });
+        let _ = surface.wait_vsync_event(None);
     }
 
     Ok(())
@@ -105,7 +164,10 @@ pub fn main() -> Result<()> {
 
 #[panic_handler]
 fn panic_handler(info: &panic::PanicInfo) -> ! {
-    let panic_str = format!("{}", info);
-    nx::diag::abort::abort(abort::AbortLevel::FatalThrow(), nx::rc::ResultPanicked::make());
+    let _panic_str = format!("{}", info);
+    nx::diag::abort::abort(
+        abort::AbortLevel::FatalThrow(),
+        nx::rc::ResultPanicked::make(),
+    );
     //util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::FatalThrow())
 }
