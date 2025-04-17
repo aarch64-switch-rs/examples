@@ -13,4 +13,5 @@ default-features = false
 features = []
 
 [package.metadata.nx.nro]
+overlay = true
 nacp = { default_name = "simple-window", default_author = "XorTroll", version = "Example" }

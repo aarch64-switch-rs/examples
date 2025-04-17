@@ -27,6 +27,7 @@ Homebrew examples of Nintendo Switch homebrew written with this organization's t
 - `os`:
 
   - `threads`: example of thread support
+  - `thread_panic`: example of gracefully catching a panicking thread, requires a build like `RUSTFLAGS="-C panic=unwind" cargo +nightly nx build -p thread_panic` to ensure unwinding occurs.
 
 - `server-ipc`:
 

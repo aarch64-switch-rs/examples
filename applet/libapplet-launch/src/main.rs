@@ -9,18 +9,17 @@ use nx::diag::abort;
 use nx::diag::log::lm::LmLogger;
 use nx::ipc::sf;
 use nx::result::*;
-use nx::service;
 use nx::service::applet;
-use nx::service::applet::IAllSystemAppletProxiesService;
 use nx::service::applet::ILibraryAppletAccessor;
 use nx::service::applet::ILibraryAppletCreator;
-use nx::service::applet::ILibraryAppletProxy;
 use nx::service::applet::IStorage;
 use nx::service::applet::IStorageAccessor;
+use nx::service::applet::ProxyCommon as _;
 use nx::svc;
 use nx::util;
 use nx::wait;
 
+use core::ops::Deref;
 use core::panic;
 
 #[no_mangle]
@@ -67,14 +66,10 @@ impl CommonArguments {
 
 #[no_mangle]
 pub fn main() -> Result<()> {
-    let applet_proxy_srv = service::new_service_object::<applet::AllSystemAppletProxiesService>()?;
-
-    let attr: applet::AppletAttribute = unsafe { core::mem::zeroed() };
-    let lib_applet_proxy = applet_proxy_srv.open_library_applet_proxy(
-        sf::ProcessId::new(),
-        sf::Handle::from(svc::CURRENT_PROCESS_PSEUDO_HANDLE),
-        sf::Buffer::from_var(&attr),
-    )?;
+    applet::initialize()?;
+    
+    let lib_applet_proxy_guard = applet::get_applet_proxy();
+    let lib_applet_proxy = lib_applet_proxy_guard.deref().as_ref().expect("Error unwrapping applet proxy after successful init.");
     let lib_applet_creator = lib_applet_proxy.get_library_applet_creator()?;
     let lib_applet_accessor = lib_applet_creator.create_library_applet(
         applet::AppletId::LibraryAppletPlayerSelect,
