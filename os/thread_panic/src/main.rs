@@ -40,7 +40,7 @@ pub fn main() -> Result<()> {
 fn panic_handler(info: &panic::PanicInfo) -> ! {
     if info.can_unwind() {
         let message = format!("{:?}", info);
-        nx::unwinding::panic::begin_panic(Box::new(message) as Box<dyn Any + Send>);
+        unwinding::panic::begin_panic(Box::new(message) as Box<dyn Any + Send>);
     }
     util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::FatalThrow())
 }

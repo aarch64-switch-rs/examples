@@ -6,6 +6,7 @@ edition = "2021"
 
 [dependencies]
 nx = { workspace = true, features = [ "services" ] }
+unwinding ={ version = "0.2.5", default-features = false, features = ["panic"]}
 
 [package.metadata.nx.nro]
 nacp = { default_name = "threads", default_author = "XorTroll", version = "Example" }
