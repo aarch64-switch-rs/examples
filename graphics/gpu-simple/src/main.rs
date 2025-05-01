@@ -1,6 +1,5 @@
 #![no_std]
 #![no_main]
-#![feature(thread_local)]
 
 extern crate alloc;
 use alloc::format;
