@@ -4,9 +4,9 @@ use nx::ipc::sf;
 use nx::result::Result;
 use nx::service::{self, sm};
 use nx::version;
-use nx::{ipc_sf_define_default_interface_client, ipc_sf_define_interface_trait};
+use nx::{ipc_sf_define_default_client_for_interface, ipc_sf_define_interface_trait};
 
-ipc_sf_define_default_interface_client!(DemoService);
+ipc_sf_define_default_client_for_interface!(DemoService);
 ipc_sf_define_interface_trait! {
     trait DemoService {
         sample_command [999, version::VersionInterval::all(), mut ]: (a: u32, b: u64, c: sf::InAutoSelectBuffer<u8>, d: sf::OutAutoSelectBuffer<u8>) => () ();

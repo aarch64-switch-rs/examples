@@ -8,7 +8,7 @@ use nx::version;
 
 // TODO: move this interface to nx libs (and finish it)...
 
-ipc_sf_define_default_interface_client!(PrepoService);
+ipc_sf_define_default_client_for_interface!(PrepoService);
 ipc_sf_define_interface_trait! {
     trait PrepoService {
         save_report_old [10100, version::VersionInterval::all(), mut ]: (process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();

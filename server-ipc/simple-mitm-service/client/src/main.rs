@@ -11,8 +11,8 @@ use nx::diag::abort;
 use nx::diag::log::{lm::LmLogger, LogSeverity};
 use nx::result::*;
 use nx::service;
-use nx::service::psm::IPsmServer;
-use nx::service::psm::PsmServer;
+use nx::service::psm::IPsmClient;
+use nx::service::psm::PsmService;
 use nx::svc;
 use nx::util;
 
@@ -31,7 +31,7 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 
 #[no_mangle]
 pub fn main() -> Result<()> {
-    let psm = service::new_service_object::<PsmServer>()?;
+    let psm = service::new_service_object::<PsmService>()?;
 
     let battery_p = psm.get_battery_charge_percentage()?;
     diag_log!(LmLogger { LogSeverity::Trace, true } => "Battery percentage value: {}%\n", battery_p);

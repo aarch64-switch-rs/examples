@@ -1,16 +1,15 @@
 use crate::logger;
 use nx::diag::log;
-use nx::ipc::client::IClientObject;
 use nx::ipc::server;
 use nx::ipc::server::ISessionObject;
 use nx::ipc::sf;
 use nx::ipc::sf::lm;
 use nx::result::*;
 use nx::service;
-use nx::service::lm::ILogServiceServer;
 use nx::service::lm::ILoggerServer;
+use nx::service::lm::ILoggingServer;
 use nx::service::pm;
-use nx::service::pm::IInformationInterface;
+use nx::service::pm::IInformationInterfaceClient;
 use nx::service::sm;
 
 pub struct BinaryFileLogger {
@@ -58,7 +57,7 @@ impl ISessionObject for BinaryFileLogger {
 
 pub struct LogService;
 
-impl ILogServiceServer for LogService {
+impl ILoggingServer for LogService {
     fn open_logger(
         &mut self,
         process_id: u64,
@@ -78,7 +77,7 @@ impl server::ISessionObject for LogService {
         protocol: nx::ipc::CommandProtocol,
         server_ctx: &mut server::ServerContext,
     ) -> Option<Result<()>> {
-        <Self as ILogServiceServer>::try_handle_request_by_id(self, req_id, protocol, server_ctx)
+        <Self as ILoggingServer>::try_handle_request_by_id(self, req_id, protocol, server_ctx)
     }
 }
 

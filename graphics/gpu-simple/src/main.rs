@@ -9,6 +9,9 @@ use alloc::vec::Vec;
 
 use nx::diag::abort;
 use nx::diag::log::lm::LmLogger;
+use nx::fs;
+use nx::fs::mount_sd_card;
+use nx::fs::FileOpenOption;
 use nx::gpu;
 use nx::gpu::canvas::AlphaBlend;
 use nx::gpu::canvas::BufferedCanvas;
@@ -105,6 +108,10 @@ impl Square {
 #[no_mangle]
 fn main() -> Result<()> {
 
+    fs::initialize_fspsrv_session()?;
+    mount_sd_card("sdmc")?;
+    let mut log_file = fs::open_file("sdmc:/gpu-simple.log", FileOpenOption::Append() | FileOpenOption::Create() | FileOpenOption::Write())?;
+
     let supported_style_tags = hid::NpadStyleTag::Handheld()
         | hid::NpadStyleTag::FullKey()
         | hid::NpadStyleTag::JoyDual()
@@ -112,7 +119,8 @@ fn main() -> Result<()> {
         | hid::NpadStyleTag::JoyRight();
     let input_ctx = match input::Context::new(supported_style_tags, 2) {
         Ok(ok) => ok,
-        Err(_e) => {
+        Err(e) => {
+            log_file.write_array(format!("Error getting input context: {:#X}", e.get_value()).as_bytes());
             return Ok(());
         }
     };
@@ -127,7 +135,8 @@ fn main() -> Result<()> {
         match nx::gpu::canvas::Font::try_from_slice(include_bytes!("../../font/Roboto-Medium.ttf"))
         {
             Ok(ok) => ok,
-            Err(_) => {
+            Err(e) => {
+                log_file.write_array("Error getting font: invalid_font".as_bytes());
                 return Ok(());
             }
         };
@@ -139,7 +148,8 @@ fn main() -> Result<()> {
             0x800000,
         ) {
             Ok(ok) => ok,
-            Err(_e) => {
+            Err(e) => {
+                log_file.write_array(format!("Error getting gpu context: {:#X}", e.get_value()).as_bytes());
                 return Ok(());
             }
         };
@@ -151,8 +161,10 @@ fn main() -> Result<()> {
         gpu::BlockLinearHeights::FourGobs,
     ) {
         Ok(s) => s,
-        Err(_e) => return Ok(()),
-    }};
+        Err(e) => {
+            log_file.write_array(format!("Error getting canvas manager: {:#X}", e.get_value()).as_bytes());
+            return Ok(());
+    }}};
 
     'render: loop {
 

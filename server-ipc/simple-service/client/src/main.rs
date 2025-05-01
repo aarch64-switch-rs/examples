@@ -12,7 +12,7 @@ use nx::service;
 use nx::svc;
 use nx::util;
 
-use simple_service_server::{DemoService, IDemoService};
+use simple_service_server::{DemoService, IDemoServiceClient};
 
 #[no_mangle]
 pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {

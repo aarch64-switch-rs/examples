@@ -9,7 +9,7 @@ use nx::diag::abort;
 use nx::diag::log::lm::LmLogger;
 use nx::ipc::server;
 use nx::result::*;
-use nx::service::psm::IPsmServerServer;
+use nx::service::psm::IPsmServer;
 use nx::service::sm;
 use nx::util;
 
@@ -18,7 +18,7 @@ use core::ptr::addr_of_mut;
 
 pub struct PsmMitmServer;
 
-impl IPsmServerServer for PsmMitmServer {
+impl IPsmServer for PsmMitmServer {
     fn get_battery_charge_percentage(&mut self) -> Result<u32> {
         Ok(69)
     }
@@ -31,7 +31,7 @@ impl server::ISessionObject for PsmMitmServer {
         protocol: nx::ipc::CommandProtocol,
         server_ctx: &mut server::ServerContext,
     ) -> Option<Result<()>> {
-        <Self as IPsmServerServer>::try_handle_request_by_id(self, req_id, protocol, server_ctx)
+        <Self as IPsmServer>::try_handle_request_by_id(self, req_id, protocol, server_ctx)
     }
 }
 
