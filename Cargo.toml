@@ -24,7 +24,6 @@ nx = { git = "https://github.com/pantsman0/nx", branch = "getting_ready_for_merg
     "gpu",
     "fs",
 ] }
-#nx = { path = "../../../code/nx", features = [ "input", "gpu", "fs" ] }
 #nx = { git = "https://github.com/aarch64-switch-rs/nx", features = [ "input", "gpu", "fs" ] }
 
 

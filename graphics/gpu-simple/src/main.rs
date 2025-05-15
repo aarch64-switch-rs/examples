@@ -119,7 +119,7 @@ fn main() -> Result<()> {
     let input_ctx = match input::Context::new(supported_style_tags, 2) {
         Ok(ok) => ok,
         Err(e) => {
-            log_file.write_array(format!("Error getting input context: {:#X}", e.get_value()).as_bytes());
+            let _ = log_file.write_array(format!("Error getting input context: {:#X}", e.get_value()).as_bytes());
             return Ok(());
         }
     };
@@ -134,8 +134,8 @@ fn main() -> Result<()> {
         match nx::gpu::canvas::Font::try_from_slice(include_bytes!("../../font/Roboto-Medium.ttf"))
         {
             Ok(ok) => ok,
-            Err(e) => {
-                log_file.write_array("Error getting font: invalid_font".as_bytes());
+            Err(_e) => {
+                let _ = log_file.write_array("Error getting font: invalid_font".as_bytes());
                 return Ok(());
             }
         };
@@ -148,7 +148,7 @@ fn main() -> Result<()> {
         ) {
             Ok(ok) => ok,
             Err(e) => {
-                log_file.write_array(format!("Error getting gpu context: {:#X}", e.get_value()).as_bytes());
+                let _ = log_file.write_array(format!("Error getting gpu context: {:#X}", e.get_value()).as_bytes());
                 return Ok(());
             }
         };
@@ -161,7 +161,7 @@ fn main() -> Result<()> {
     ) {
         Ok(s) => s,
         Err(e) => {
-            log_file.write_array(format!("Error getting canvas manager: {:#X}", e.get_value()).as_bytes());
+            let _ = log_file.write_array(format!("Error getting canvas manager: {:#X}", e.get_value()).as_bytes());
             return Ok(());
     }}};
 

@@ -71,14 +71,13 @@ pub fn main() -> Result<()> {
     let reader2_state = Arc::new((AtomicUsize::new(0), AtomicU8::new(0)));
 
     let kill = Arc::new(AtomicBool::new(false));
-    nx::rand::initialize();
     let rand = if let Ok(rand) = new_service_object::<RandomService>() {
         Arc::new(rand)
     } else {
         return Ok(());
     };
 
-    let t1 = {
+    let _t1 = {
         let rand = rand.clone();
         let shared_state = shared_state.clone();
         let writer_state = writer1_state.clone();
@@ -87,24 +86,24 @@ pub fn main() -> Result<()> {
             let mut sleep_time = [0u8; 8];
             let mut new_val: u8 = 0;
             while !kill.load(Ordering::Relaxed) {
-                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time));
-                thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 100_000);
+                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time)).unwrap();
+                let _ = thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 100_000);
 
                 let mut writer_handle = shared_state.write();
-                rand.generate_random_bytes(Buffer::from_mut_var(&mut new_val));
+                rand.generate_random_bytes(Buffer::from_mut_var(&mut new_val)).unwrap();
                 *writer_handle = new_val;
 
                 writer_state.0.fetch_add(1, Ordering::Release);
                 writer_state.1.store(new_val, Ordering::Release);
 
                 // sleep while holding write lock
-                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time));
-                thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 10_000);
+                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time)).unwrap();
+                let _ = thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 10_000);
             }
         })
     };
 
-    let t2 = {
+    let _t2 = {
         let rand = rand.clone();
         let shared_state = shared_state.clone();
         let writer_state = writer2_state.clone();
@@ -113,24 +112,24 @@ pub fn main() -> Result<()> {
             let mut sleep_time = [0u8; 8];
             let mut new_val: u8 = 0;
             while !kill.load(Ordering::Relaxed) {
-                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time));
-                thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 100_000);
+                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time)).unwrap();
+                let _ = thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 100_000);
 
                 let mut writer_handle = shared_state.write();
-                rand.generate_random_bytes(Buffer::from_mut_var(&mut new_val));
+                rand.generate_random_bytes(Buffer::from_mut_var(&mut new_val)).unwrap();
                 *writer_handle = new_val;
 
                 writer_state.0.fetch_add(1, Ordering::Release);
                 writer_state.1.store(new_val, Ordering::Release);
 
                 // sleep while holding write lock
-                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time));
-                thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 10_000);
+                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time)).unwrap();
+                let _ = thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 10_000);
             }
         })
     };
 
-    let t3 = {
+    let _t3 = {
         let rand = rand.clone();
         let shared_state = shared_state.clone();
         let reader_state = reader1_state.clone();
@@ -138,8 +137,8 @@ pub fn main() -> Result<()> {
         thread::spawn(move || {
             let mut sleep_time = [0u8; 8];
             while !kill.load(Ordering::Relaxed) {
-                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time));
-                thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 500);
+                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time)).unwrap();
+                let _ = thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 500);
 
                 let reader_handle = shared_state.read();
 
@@ -147,13 +146,13 @@ pub fn main() -> Result<()> {
                 reader_state.1.store(*reader_handle, Ordering::Release);
 
                 // sleep while holding read lock, less read time than write
-                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time));
-                thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 100_000);
+                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time)).unwrap();
+                let _ = thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 100_000);
             }
         })
     };
 
-    let t4 = {
+    let _t4 = {
         let rand = rand.clone();
         let shared_state = shared_state.clone();
         let reader_state = reader2_state.clone();
@@ -161,8 +160,8 @@ pub fn main() -> Result<()> {
         thread::spawn(move || {
             let mut sleep_time = [0u8; 8];
             while !kill.load(Ordering::Relaxed) {
-                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time));
-                thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 500);
+                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time)).unwrap();
+                let _ = thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 500);
 
                 let reader_handle = shared_state.read();
 
@@ -170,8 +169,8 @@ pub fn main() -> Result<()> {
                 reader_state.1.store(*reader_handle, Ordering::Release);
 
                 // sleep while holding read lock, less read time than write
-                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time));
-                thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 50_000);
+                rand.generate_random_bytes(Buffer::from_mut_array(&mut sleep_time)).unwrap();
+                let _ = thread::sleep(i64::from_ne_bytes(sleep_time).abs() % 50_000);
             }
         })
     };

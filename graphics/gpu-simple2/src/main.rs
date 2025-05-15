@@ -47,7 +47,7 @@ pub fn main() -> Result<()> {
             let gpu_ctx = gpu::Context::new(
                 gpu::NvDrvServiceKind::Applet,
                 gpu::ViServiceKind::System,
-                0x800000,
+                0x40000,
             )?;
     let mut surface = match nx::gpu::canvas::CanvasManager::new_stray(
         Arc::new(RwLock::new(gpu_ctx)),

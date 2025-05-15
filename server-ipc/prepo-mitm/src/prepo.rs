@@ -92,7 +92,7 @@ impl<const S: u32> PrepoServiceMitmServer<S> {
             fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append(),
         ) {
             msgpack_file
-                .write_array(unsafe { ctx.report_msgpack_buf.get_slice() })
+                .write_array(ctx.report_msgpack_buf.as_slice().unwrap())
                 .unwrap();
         }
 

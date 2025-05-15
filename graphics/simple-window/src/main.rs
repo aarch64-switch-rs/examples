@@ -16,7 +16,6 @@ use nx::result::*;
 use nx::service::hid;
 use nx::service::vi::LayerFlags;
 use nx::sync::RwLock;
-use nx::thread::sleep;
 use nx::{fs, gpu};
 
 use core::panic;
@@ -57,12 +56,11 @@ fn draw_circle(surface: &mut ui2d::SurfaceEx, x: i32, y: i32, radius: u32, color
 
 #[unsafe(no_mangle)]
 pub fn main() -> Result<()> {
-
     /*let wait = core::sync::atomic::AtomicBool::new(true);
     while wait.load(core::sync::atomic::Ordering::Relaxed) {
         sleep(100);
     }*/
-    
+
     fs::initialize_fspsrv_session()?;
     fs::mount_sd_card("sdmc")?;
 
@@ -107,8 +105,8 @@ pub fn main() -> Result<()> {
     let mut surface = match nx::gpu::canvas::CanvasManager::new_managed(
         gpu_ctx,
         None,
-        0,
-        0,
+        x,
+        y,
         gpu::LayerZ::Max,
         WIDTH,
         HEIGHT,
@@ -116,7 +114,7 @@ pub fn main() -> Result<()> {
         LayerFlags::None(),
         BUFFER_COUNT,
         BLOCK_HEIGHT_CONFIG,
-        gpu::surface::ScaleMode::PreseveAspect { height: 1080 }
+        gpu::surface::ScaleMode::PreseveAspect { height: 1080 },
     ) {
         Ok(ok) => ok,
         Err(e) => {
@@ -153,7 +151,7 @@ pub fn main() -> Result<()> {
 
         let _ = surface.render_unbuffered(Some(_c_black), |canvas| {
             canvas.draw_rect(
-                offset%256,
+                offset % 256,
                 0,
                 10,
                 canvas.height(),
@@ -162,7 +160,7 @@ pub fn main() -> Result<()> {
             );
             canvas.draw_rect(
                 0,
-                offset%256,
+                offset % 256,
                 canvas.width(),
                 10,
                 RGBType::new_scaled(0, 255, 0, 128),
@@ -185,6 +183,4 @@ fn panic_handler(info: &panic::PanicInfo) -> ! {
         abort::AbortLevel::FatalThrow(),
         nx::rc::ResultPanicked::make(),
     );
-    unreachable!()
-    //util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::FatalThrow())
 }
