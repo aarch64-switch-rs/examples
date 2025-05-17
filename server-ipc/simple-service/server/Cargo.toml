@@ -1,17 +1,17 @@
 [package]
-name = "server"
+name = "simple-service-server"
 version = "0.1.0"
 authors = ["XorTroll"]
 edition = "2021"
 
 [dependencies]
-nx = { git = "https://github.com/aarch64-switch-rs/nx", features = [ "services" ] }
+nx = { workspace = true, features = [ "services" ] }
 paste = "1.0"
 
 [package.metadata.nx.nsp.npdm]
 name = "service-test"
 signature_key_generation = 0
-main_thread_stack_size = "0x20000"
+main_thread_stack_size = "0x200000"
 main_thread_priority = 49
 main_thread_core_number = 3
 system_resource_size = 0

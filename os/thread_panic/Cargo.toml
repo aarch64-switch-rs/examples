@@ -1,11 +1,12 @@
 [package]
-name = "threads"
+name = "thread_panic"
 version = "0.1.0"
-authors = ["XorTroll"]
+authors = ["Pantsman0"]
 edition = "2021"
 
 [dependencies]
 nx = { workspace = true, features = [ "services" ] }
+unwinding ={ version = "0.2.6", default-features = false, features = ["panic"]}
 
 [package.metadata.nx.nro]
 nacp = { default_name = "threads", default_author = "XorTroll", version = "Example" }

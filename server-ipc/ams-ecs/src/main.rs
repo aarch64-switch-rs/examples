@@ -47,7 +47,7 @@ pub fn main() -> Result<()> {
 
     let handle = ldr_shel.get().atmosphere_register_external_code(TAKE_OVER_APP_ID)?;
 
-    let subdir_ipc_fs = nx::mem::Shared::new(nx::fs::subdir::FileSystem::new("sdmc:/dummy".to_string()));
+    let subdir_ipc_fs = ::alloc::boxed::Box::new(nx::fs::subdir::FileSystem::new("sdmc:/dummy".to_string()));
 
     let mut manager = Manager::new()?;
     manager.register_session(handle.handle, subdir_ipc_fs);
