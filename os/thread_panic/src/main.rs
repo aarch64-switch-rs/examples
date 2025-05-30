@@ -16,6 +16,9 @@ use nx::util;
 use core::any::Any;
 use core::panic;
 
+nx::rrt0_define_module_name!("thread-panic");
+nx::rrt0_initialize_heap!();
+
 #[no_mangle]
 pub fn main() -> Result<()> {
     diag_log!(LmLogger { LogSeverity::Trace, false } => "Starting threads...\n");

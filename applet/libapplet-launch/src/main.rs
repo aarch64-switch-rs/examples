@@ -71,7 +71,7 @@ pub fn main() -> Result<()> {
     let lib_applet_proxy_guard = applet::get_applet_proxy();
     let lib_applet_proxy = lib_applet_proxy_guard.deref().as_ref().expect("Error unwrapping applet proxy after successful init.");
     let lib_applet_creator = lib_applet_proxy.get_library_applet_creator()?;
-    let lib_applet_accessor = lib_applet_creator.create_library_applet(
+    let mut lib_applet_accessor = lib_applet_creator.create_library_applet(
         applet::AppletId::LibraryAppletPlayerSelect,
         applet::LibraryAppletMode::AllForeground,
     )?;

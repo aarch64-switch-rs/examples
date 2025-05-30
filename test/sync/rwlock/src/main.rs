@@ -26,6 +26,7 @@ use core::sync::atomic::Ordering;
 use nx::gpu::canvas::Canvas;
 
 nx::rrt0_define_module_name!("rwlock-test");
+nx::rrt0_initialize_heap!();
 
 type RGBType = nx::gpu::canvas::RGBA4;
 
