@@ -16,20 +16,22 @@ use nx::result::*;
 use nx::service::hid;
 use nx::service::vi::LayerFlags;
 use nx::sync::RwLock;
+use nx::util;
 use nx::{fs, gpu};
 
 use core::panic;
 
-/*
+
 // We're using 8MB of heap
 const CUSTOM_HEAP_LEN: usize = 0x800000;
 static mut CUSTOM_HEAP: [u8; CUSTOM_HEAP_LEN] = [0; CUSTOM_HEAP_LEN];
 
 #[unsafe(no_mangle)]
+#[allow(static_mut_refs)]
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     unsafe { util::PointerAndSize::new(&raw mut CUSTOM_HEAP as *mut _, CUSTOM_HEAP.len()) }
 }
-*/
+
 static LOG_PATH: &str = "sdmc:/fs-test-log.log";
 
 type RGBType = nx::gpu::canvas::RGBA4;

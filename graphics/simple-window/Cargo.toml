@@ -5,7 +5,7 @@ authors = ["XorTroll"]
 edition = "2021"
 
 [dependencies]
-nx = { workspace = true, features = [ "input", "canvas"] }
+nx = { workspace = true, features = [ "input", "canvas", "fs"] }
 
 [dependencies.libm]
 version = "0.2.1"

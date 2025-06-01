@@ -60,10 +60,10 @@ pub struct LogService;
 impl ILoggingServer for LogService {
     fn open_logger(
         &mut self,
-        process_id: u64,
+        process_id: sf::ProcessId,
     ) -> Result<impl ILoggerServer + 'static + ISessionObject> {
         let pminfo = service::new_service_object::<pm::InformationInterface>()?;
-        let program_id = pminfo.get_program_id(process_id)?;
+        let program_id = pminfo.get_program_id(process_id.process_id)?;
         diag_log!(logger::SelfLogger { log::LogSeverity::Trace, false } => "Opening logger for program ID 0x{:016X}", program_id.0);
 
         Ok(BinaryFileLogger::new(program_id.0))
