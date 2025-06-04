@@ -10,7 +10,6 @@ extern crate alloc;
 extern crate paste;
 
 use core::panic;
-use core::ptr::addr_of_mut;
 use nx::diag::abort;
 use nx::fs;
 use nx::ipc::server;
@@ -19,7 +18,7 @@ use nx::result::*;
 use nx::service;
 use nx::service::psc;
 use nx::service::psc::IPmModuleClient;
-use nx::service::psc::IPmServiceClient;
+use nx::service::psc::IPmClient;
 use nx::thread;
 use nx::util;
 use nx::wait;
@@ -35,14 +34,14 @@ static mut CUSTOM_HEAP: [u8; CUSTOM_HEAP_SIZE] = [0; CUSTOM_HEAP_SIZE];
 #[no_mangle]
 #[allow(static_mut_refs)] // :(
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
-    util::PointerAndSize::new(addr_of_mut!(CUSTOM_HEAP) as _, CUSTOM_HEAP_SIZE)
+    util::PointerAndSize::new(&raw mut CUSTOM_HEAP as _, CUSTOM_HEAP_SIZE)
 }
 
 pub fn pm_module_main() -> Result<()> {
     let psc = service::new_service_object::<psc::PmService>()?;
     let module = psc.get_pm_module()?;
 
-    let event_handle = module.initialize(psc::ModuleId::Lm, sf::Buffer::empty())?;
+    let event_handle = module.initialize(psc::ModuleId::Lm, sf::Buffer::from_array(&[]))?;
     loop {
         wait::wait_handles(&[event_handle.handle], -1)?;
 

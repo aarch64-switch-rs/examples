@@ -11,17 +11,17 @@ use nx::version;
 ipc_sf_define_default_client_for_interface!(PrepoService);
 ipc_sf_define_interface_trait! {
     trait PrepoService {
-        save_report_old [10100, version::VersionInterval::all(), mut ]: (process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
-        save_report_with_user_old [10101, version::VersionInterval::all(), mut ]: (user_id: u128, process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
-        save_report_old_2 [10102, version::VersionInterval::all(), mut ]: (process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
-        save_report_with_user_old_2 [10103, version::VersionInterval::all(), mut ]: (user_id: u128, process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
-        save_report [10104, version::VersionInterval::all(), mut ]: (process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
-        save_report_with_user [10105, version::VersionInterval::all(), mut ]: (user_id: u128, process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
+        save_report_old [10100, version::VersionInterval::all(), mut ]: (process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<'_, u8>, report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>) => () ();
+        save_report_with_user_old [10101, version::VersionInterval::all(), mut ]: (user_id: u128, process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<'_, u8>, report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>) => () ();
+        save_report_old_2 [10102, version::VersionInterval::all(), mut ]: (process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<'_, u8>, report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>) => () ();
+        save_report_with_user_old_2 [10103, version::VersionInterval::all(), mut ]: (user_id: u128, process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<'_, u8>, report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>) => () ();
+        save_report [10104, version::VersionInterval::all(), mut ]: (process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<'_, u8>, report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>) => () ();
+        save_report_with_user [10105, version::VersionInterval::all(), mut ]: (user_id: u128, process_id: sf::ProcessId, room_str_buf: sf::InPointerBuffer<'_, u8>, report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>) => () ();
         request_immediate_transmission [10200, version::VersionInterval::all(), mut ]: () => () ();
         get_transmission_status [10300, version::VersionInterval::all(), mut ]: () => (status: u32) (status: u32);
         get_system_session_id [10400, version::VersionInterval::all(), mut ]: () => (id: u64) (id: u64);
-        save_system_report [20100, version::VersionInterval::all(), mut ]: (application_id: u64, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
-        save_system_report_with_user [20101, version::VersionInterval::all(), mut ]: (user_id: u128, application_id: u64, room_str_buf: sf::InPointerBuffer<u8>, report_msgpack_buf: sf::InMapAliasBuffer<u8>) => () ();
+        save_system_report [20100, version::VersionInterval::all(), mut ]: (application_id: u64, room_str_buf: sf::InPointerBuffer<'_, u8>, report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>) => () ();
+        save_system_report_with_user [20101, version::VersionInterval::all(), mut ]: (user_id: u128, application_id: u64, room_str_buf: sf::InPointerBuffer<'_, u8>, report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>) => () ();
     }
 }
 
@@ -54,12 +54,12 @@ pub enum ReportKind {
     System,
 }
 
-pub struct ReportContext {
+pub struct ReportContext<'a> {
     pub kind: ReportKind,
     pub process_id: Option<u64>,
     pub application_id: Option<u64>,
-    pub room_str_buf: sf::InPointerBuffer<u8>,
-    pub report_msgpack_buf: sf::InMapAliasBuffer<u8>,
+    pub room_str_buf: sf::InPointerBuffer<'a, u8>,
+    pub report_msgpack_buf: sf::InMapAliasBuffer<'a, u8>,
     pub user_id: Option<u128>,
 }
 
@@ -119,8 +119,8 @@ impl<const S: u32> PrepoServiceMitmServer<S> {
     fn save_report_impl(
         &self,
         process_id: sf::ProcessId,
-        room_str_buf: sf::InPointerBuffer<u8>,
-        report_msgpack_buf: sf::InMapAliasBuffer<u8>,
+        room_str_buf: sf::InPointerBuffer<'_, u8>,
+        report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>,
     ) -> Result<()> {
         let ctx = ReportContext {
             kind: ReportKind::Normal,
@@ -138,8 +138,8 @@ impl<const S: u32> PrepoServiceMitmServer<S> {
         &self,
         user_id: u128,
         process_id: sf::ProcessId,
-        room_str_buf: sf::InPointerBuffer<u8>,
-        report_msgpack_buf: sf::InMapAliasBuffer<u8>,
+        room_str_buf: sf::InPointerBuffer<'_, u8>,
+        report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>,
     ) -> Result<()> {
         let ctx = ReportContext {
             kind: ReportKind::Normal,
@@ -156,8 +156,8 @@ impl<const S: u32> PrepoServiceMitmServer<S> {
     fn save_system_report_impl(
         &self,
         application_id: u64,
-        room_str_buf: sf::InPointerBuffer<u8>,
-        report_msgpack_buf: sf::InMapAliasBuffer<u8>,
+        room_str_buf: sf::InPointerBuffer<'_, u8>,
+        report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>,
     ) -> Result<()> {
         let ctx = ReportContext {
             kind: ReportKind::System,
@@ -175,8 +175,8 @@ impl<const S: u32> PrepoServiceMitmServer<S> {
         &self,
         user_id: u128,
         application_id: u64,
-        room_str_buf: sf::InPointerBuffer<u8>,
-        report_msgpack_buf: sf::InMapAliasBuffer<u8>,
+        room_str_buf: sf::InPointerBuffer<'_, u8>,
+        report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>,
     ) -> Result<()> {
         let ctx = ReportContext {
             kind: ReportKind::System,
@@ -195,8 +195,8 @@ impl<const S: u32> IPrepoServiceServer for PrepoServiceMitmServer<S> {
     fn save_report_old(
         &mut self,
         process_id: sf::ProcessId,
-        room_str_buf: sf::InPointerBuffer<u8>,
-        report_msgpack_buf: sf::InMapAliasBuffer<u8>,
+        room_str_buf: sf::InPointerBuffer<'_, u8>,
+        report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>,
     ) -> Result<()> {
         self.save_report_impl(process_id, room_str_buf, report_msgpack_buf)
     }
@@ -205,8 +205,8 @@ impl<const S: u32> IPrepoServiceServer for PrepoServiceMitmServer<S> {
         &mut self,
         user_id: u128,
         process_id: sf::ProcessId,
-        room_str_buf: sf::InPointerBuffer<u8>,
-        report_msgpack_buf: sf::InMapAliasBuffer<u8>,
+        room_str_buf: sf::InPointerBuffer<'_, u8>,
+        report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>,
     ) -> Result<()> {
         self.save_report_with_user_impl(user_id, process_id, room_str_buf, report_msgpack_buf)
     }
@@ -214,8 +214,8 @@ impl<const S: u32> IPrepoServiceServer for PrepoServiceMitmServer<S> {
     fn save_report_old_2(
         &mut self,
         process_id: sf::ProcessId,
-        room_str_buf: sf::InPointerBuffer<u8>,
-        report_msgpack_buf: sf::InMapAliasBuffer<u8>,
+        room_str_buf: sf::InPointerBuffer<'_, u8>,
+        report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>,
     ) -> Result<()> {
         self.save_report_impl(process_id, room_str_buf, report_msgpack_buf)
     }
@@ -224,8 +224,8 @@ impl<const S: u32> IPrepoServiceServer for PrepoServiceMitmServer<S> {
         &mut self,
         user_id: u128,
         process_id: sf::ProcessId,
-        room_str_buf: sf::InPointerBuffer<u8>,
-        report_msgpack_buf: sf::InMapAliasBuffer<u8>,
+        room_str_buf: sf::InPointerBuffer<'_, u8>,
+        report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>,
     ) -> Result<()> {
         self.save_report_with_user_impl(user_id, process_id, room_str_buf, report_msgpack_buf)
     }
@@ -233,8 +233,8 @@ impl<const S: u32> IPrepoServiceServer for PrepoServiceMitmServer<S> {
     fn save_report(
         &mut self,
         process_id: sf::ProcessId,
-        room_str_buf: sf::InPointerBuffer<u8>,
-        report_msgpack_buf: sf::InMapAliasBuffer<u8>,
+        room_str_buf: sf::InPointerBuffer<'_, u8>,
+        report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>,
     ) -> Result<()> {
         self.save_report_impl(process_id, room_str_buf, report_msgpack_buf)
     }
@@ -243,8 +243,8 @@ impl<const S: u32> IPrepoServiceServer for PrepoServiceMitmServer<S> {
         &mut self,
         user_id: u128,
         process_id: sf::ProcessId,
-        room_str_buf: sf::InPointerBuffer<u8>,
-        report_msgpack_buf: sf::InMapAliasBuffer<u8>,
+        room_str_buf: sf::InPointerBuffer<'_, u8>,
+        report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>,
     ) -> Result<()> {
         self.save_report_with_user_impl(user_id, process_id, room_str_buf, report_msgpack_buf)
     }
@@ -267,8 +267,8 @@ impl<const S: u32> IPrepoServiceServer for PrepoServiceMitmServer<S> {
     fn save_system_report(
         &mut self,
         application_id: u64,
-        room_str_buf: sf::InPointerBuffer<u8>,
-        report_msgpack_buf: sf::InMapAliasBuffer<u8>,
+        room_str_buf: sf::InPointerBuffer<'_, u8>,
+        report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>,
     ) -> Result<()> {
         self.save_system_report_impl(application_id, room_str_buf, report_msgpack_buf)
     }
@@ -277,8 +277,8 @@ impl<const S: u32> IPrepoServiceServer for PrepoServiceMitmServer<S> {
         &mut self,
         user_id: u128,
         application_id: u64,
-        room_str_buf: sf::InPointerBuffer<u8>,
-        report_msgpack_buf: sf::InMapAliasBuffer<u8>,
+        room_str_buf: sf::InPointerBuffer<'_, u8>,
+        report_msgpack_buf: sf::InMapAliasBuffer<'_, u8>,
     ) -> Result<()> {
         self.save_system_report_with_user_impl(
             user_id,

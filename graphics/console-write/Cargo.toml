@@ -1,0 +1,19 @@
+[package]
+name = "console-write"
+version = "0.1.0"
+authors = ["XorTroll"]
+edition = "2021"
+
+[dependencies]
+#nx = { workspace = true , features = [ "input", "canvas", "truetype", "fs", "console", "rand" ] }
+nx = { workspace = false, git = "https://github.com/pantsman0/nx", branch = "console_poc", features = [
+    "input",
+    "canvas",
+    "truetype",
+    "fs",
+    "console",
+    "rand",
+] }
+
+[package.metadata.nx.nro]
+nacp = { default_name = "console-write", default_author = "XorTroll", version = "Example" }

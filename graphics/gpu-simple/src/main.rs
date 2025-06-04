@@ -18,6 +18,7 @@ use nx::gpu::canvas::Canvas;
 use nx::gpu::canvas::RGBA8;
 use nx::gpu::surface::Surface;
 use nx::input;
+use nx::ipc::sf;
 use nx::result::*;
 use nx::service::hid;
 use nx::svc;
@@ -102,6 +103,12 @@ impl Square {
         
         surface.draw_rect(self.x as i32, self.y as i32, self.size, self.size, self.color, gpu::canvas::AlphaBlend::None);
     }
+}
+
+
+struct LifeTimeTest(u8);
+fn lifetime_test(s: &LifeTimeTest) -> sf::InMapAliasBuffer<LifeTimeTest> {
+    sf::InMapAliasBuffer::from_var(s)
 }
 
 #[no_mangle]

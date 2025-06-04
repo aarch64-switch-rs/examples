@@ -5,7 +5,8 @@ authors = ["XorTroll"]
 edition = "2021"
 
 [dependencies]
-nx = { workspace = true , features = [ "input", "canvas", "truetype", "fs" ] }
+#nx = { workspace = true , features = [ "input", "canvas", "truetype", "fs" ] }
+nx = { git= "https://github.com/aarch64-switch-rs/nx" , features = [ "input", "canvas", "truetype", "fs" ] }
 
 [package.metadata.nx.nro]
 nacp = { default_name = "gpu-simple", default_author = "XorTroll", version = "Example" }
