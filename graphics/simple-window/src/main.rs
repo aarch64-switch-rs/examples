@@ -106,7 +106,7 @@ pub fn main() -> Result<()> {
     let mut layer_visible = true;
     let mut surface = match nx::gpu::canvas::CanvasManager::new_managed(
         gpu_ctx,
-        None,
+        Default::default(),
         x,
         y,
         gpu::LayerZ::Max,

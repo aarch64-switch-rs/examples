@@ -105,12 +105,6 @@ impl Square {
     }
 }
 
-
-struct LifeTimeTest(u8);
-fn lifetime_test(s: &LifeTimeTest) -> sf::InMapAliasBuffer<LifeTimeTest> {
-    sf::InMapAliasBuffer::from_var(s)
-}
-
 #[no_mangle]
 fn main() -> Result<()> {
 
@@ -162,7 +156,7 @@ fn main() -> Result<()> {
 
         match nx::gpu::canvas::CanvasManager::new_stray(
         alloc::sync::Arc::new(RwLock::new(gpu_ctx)),
-        Some("Default"),
+        Default::default(),
         3,
         gpu::BlockLinearHeights::FourGobs,
     ) {

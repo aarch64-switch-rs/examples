@@ -51,7 +51,7 @@ pub fn main() -> Result<()> {
             )?;
     let mut surface = match nx::gpu::canvas::CanvasManager::new_stray(
         Arc::new(RwLock::new(gpu_ctx)),
-        Some("Default"),
+        Default::default(),
         3,
         gpu::BlockLinearHeights::FourGobs,
     ) {

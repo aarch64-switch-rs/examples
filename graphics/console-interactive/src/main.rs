@@ -3,31 +3,25 @@
 
 extern crate alloc;
 use alloc::format;
-use alloc::string::String;
 use alloc::sync::Arc;
-use alloc::vec;
 
-use nx::console::scrollback::ScrollbackConsole;
+use embedded_term::TextOnGraphic;
+use nx::console::vty::PersistantBufferedCanvas;
 use nx::diag::abort;
-use nx::fs;
-use nx::fs::mount_sd_card;
-use nx::fs::FileOpenOption;
 use nx::gpu;
 use nx::input;
-use nx::rand::RandomService;
-use nx::rand::Rng;
 use nx::result::*;
 use nx::service::hid;
-use nx::service::new_service_object;
+use nx::service::hid::shmem::KeyboardState;
 use nx::svc;
 use nx::sync::RwLock;
 use nx::thread;
 use nx::util;
 
-use core::num::NonZeroU16;
+use core::fmt::Write;
 use core::panic;
 
-nx::rrt0_define_module_name!("console-write");
+nx::rrt0_define_module_name!("console-interactive");
 
 #[no_mangle]
 pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
@@ -42,7 +36,7 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 
 #[no_mangle]
 fn main() -> Result<()> {
-    let mut console: ScrollbackConsole = {
+    let mut console = {
         let gpu_ctx = match gpu::Context::new(
             gpu::NvDrvServiceKind::Applet,
             gpu::ViServiceKind::System,
@@ -52,22 +46,25 @@ fn main() -> Result<()> {
             Err(e) => panic!("{}", e),
         };
 
-        match ScrollbackConsole::new(
+        let surface = match nx::gpu::canvas::CanvasManager::new_stray(
             Arc::new(RwLock::new(gpu_ctx)),
-            300,
-            NonZeroU16::new(90).unwrap(),
-            true,
-            None,
-            2
-        ){
-            Ok(ctx) => ctx,
-            Err(e) => panic!("{}", e)
-        }
-    };
+            Default::default(),
+            2,
+            gpu::BlockLinearHeights::FourGobs,
+        ) {
+            Ok(s) => s,
+            Err(_e) => {
+                return Ok(());
+            },
+        };
 
-    fs::initialize_fspsrv_session()?;
-    mount_sd_card("sdmc")?;
-    let mut text_file = fs::open_file("sdmc:/lorem_ipsum", FileOpenOption::Read())?;
+        let width = surface.surface.width();
+        let height = surface.surface.height() ;
+
+        let text_buffer = TextOnGraphic::new(PersistantBufferedCanvas::new(surface), width, height);
+
+        embedded_term::Console::on_text_buffer(text_buffer)
+    };
 
     let supported_style_tags = hid::NpadStyleTag::Handheld()
         | hid::NpadStyleTag::FullKey()
@@ -76,43 +73,40 @@ fn main() -> Result<()> {
         | hid::NpadStyleTag::JoyRight();
     let input_ctx = input::Context::new(supported_style_tags, 2)?;
 
-    let mut rand = new_service_object::<nx::rand::RandomService>()?;
-
+    let mut old_keyboard_state: KeyboardState = Default::default();
     'render: loop {
         for controller in [hid::NpadIdType::Handheld, hid::NpadIdType::No1]
             .iter()
             .cloned()
         {
-            let mut p_handheld = input_ctx.get_player(controller);
+            let mut player = input_ctx.get_player(controller);
 
-            let buttons_down = p_handheld.get_buttons_down();
+            let buttons_down = player.get_buttons_down();
             if buttons_down.contains(hid::NpadButton::Down()) {
-                console.scroll_down();
+                let _ = console.write_str("\x1B[1B");
             } else if buttons_down.contains(hid::NpadButton::Up()) {
-                console.scroll_up();
+                let _ = console.write_str("\x1B[1A");
             } else if buttons_down.contains(hid::NpadButton::Plus()) {
                 // Exit if Plus/+ is pressed.
                 break 'render;
             }
+
         }
 
-        let mut read_buf = vec![0u8; <RandomService as Rng>::random_range(&mut rand, 1..8)];
-        match text_file.read_array(read_buf.as_mut_slice()) {
-            Ok(read_size) => read_buf.truncate(read_size),
-            Err(_) => {
-                continue;
+        let keyboard_state= input_ctx.get_player(hid::NpadIdType::Handheld).get_keyboard_state();
+
+        for key_down in keyboard_state.keys.clone() {
+            if old_keyboard_state.keys.is_up(key_down) {
+                // new key
+                if let Some(ansi_str) = key_down.get_ansi(){
+                    console.write_str(ansi_str);
+                };
             }
         }
 
-        let push_str = String::from_utf8(read_buf).unwrap();
-
-        console.write(push_str);
-
-        console.draw()?;
-
-        let _ = console.wait_vsync_event(None);
-
-        thread::sleep(<RandomService as Rng>::random_range(&mut rand, 100..100000));
+        old_keyboard_state = keyboard_state;
+        
+        let _ = thread::sleep(100_000);
     }
 
     Ok(())
