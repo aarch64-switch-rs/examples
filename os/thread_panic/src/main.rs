@@ -9,7 +9,6 @@ use alloc::boxed::Box;
 use nx::diag::abort;
 use nx::diag::log::{lm::LmLogger, LogSeverity};
 use nx::diag_log;
-use nx::result::*;
 use nx::thread;
 use nx::util;
 
@@ -20,7 +19,7 @@ nx::rrt0_define_module_name!("thread-panic");
 nx::rrt0_initialize_heap!();
 
 #[no_mangle]
-pub fn main() -> Result<()> {
+pub fn main() {
     diag_log!(LmLogger { LogSeverity::Trace, false } => "Starting threads...\n");
 
     let thread_result = thread::Builder::new()
@@ -36,7 +35,6 @@ pub fn main() -> Result<()> {
 
     diag_log!(LmLogger { LogSeverity::Trace, false } => "Done!\n");
 
-    Ok(())
 }
 
 #[panic_handler]

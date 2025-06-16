@@ -8,7 +8,6 @@ use nx::arm;
 use nx::diag::abort;
 use nx::diag::log::lm::LmLogger;
 use nx::ipc::sf;
-use nx::result::*;
 use nx::service::applet;
 use nx::service::applet::ILibraryAppletAccessorClient;
 use nx::service::applet::ILibraryAppletCreatorClient;
@@ -65,46 +64,45 @@ impl CommonArguments {
 }
 
 #[no_mangle]
-pub fn main() -> Result<()> {
-    applet::initialize()?;
+pub fn main() {
+    applet::initialize().expect("Applet initialization failed");
     
     let lib_applet_proxy_guard = applet::get_applet_proxy();
-    let lib_applet_proxy = lib_applet_proxy_guard.deref().as_ref().expect("Error unwrapping applet proxy after successful init.");
-    let lib_applet_creator = lib_applet_proxy.get_library_applet_creator()?;
+    let lib_applet_proxy = lib_applet_proxy_guard.deref().as_ref().expect("Error unwrapping applet proxy after successful init");
+    let lib_applet_creator = lib_applet_proxy.get_library_applet_creator().expect("Error creating a library applet creator");
     let mut lib_applet_accessor = lib_applet_creator.create_library_applet(
         applet::AppletId::LibraryAppletPlayerSelect,
         applet::LibraryAppletMode::AllForeground,
-    )?;
+    ).expect("Error creating library applet accessor");
 
     {
         let common_args = CommonArguments::new(1, 0x20000, 0, false);
-        let storage = lib_applet_creator.create_storage(common_args.size as usize)?;
+        let storage = lib_applet_creator.create_storage(common_args.size as usize).expect("Error creating storage");
         {
-            let storage_accessor = storage.open()?;
-            storage_accessor.write(0, sf::Buffer::from_other_var(&common_args))?;
+            let storage_accessor = storage.open().expect("Failed to open storage");
+            storage_accessor.write(0, sf::Buffer::from_other_var(&common_args)).expect("Error writing to storage");
         }
-        lib_applet_accessor.push_in_data(storage)?;
+        lib_applet_accessor.push_in_data(storage).expect("Failed to add data to storage");
     }
 
     {
         let mut data: [u8; 0xA0] = [0; 0xA0];
         data[0x96] = 1;
-        let storage = lib_applet_creator.create_storage(data.len())?;
+        let storage = lib_applet_creator.create_storage(data.len()).expect("Error openning storage 2");
         {
-            let storage_accessor = storage.open()?;
-            storage_accessor.write(0, sf::Buffer::from_array(&data))?;
+            let storage_accessor = storage.open().expect("Failed to open storage 2");
+            storage_accessor.write(0, sf::Buffer::from_array(&data)).expect("Error writing to storage 2");
         }
-        lib_applet_accessor.push_in_data(storage)?;
+        lib_applet_accessor.push_in_data(storage).expect("failed to add data to storage 2");
     }
 
-    let event_handle = lib_applet_accessor.get_applet_state_changed_event()?;
-    lib_applet_accessor.start()?;
+    let event_handle = lib_applet_accessor.get_applet_state_changed_event().expect("Error creating applet listener");
+    lib_applet_accessor.start().expect("failed to start applet accessor.");
 
-    wait::wait_handles(&[event_handle.handle], -1)?;
+    wait::wait_handles(&[event_handle.handle], -1).expect("Error waiting for the applet to close");
 
-    svc::close_handle(event_handle.handle)?;
+    let _ = svc::close_handle(event_handle.handle);
 
-    Ok(())
 }
 
 #[panic_handler]

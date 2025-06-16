@@ -29,8 +29,8 @@ impl IDemoServiceServer for DemoServiceServer {
         &mut self,
         a: u32,
         b: u64,
-        c: sf::InAutoSelectBuffer<u8>,
-        d: sf::OutAutoSelectBuffer<u8>,
+        c: sf::InAutoSelectBuffer<'_, u8>,
+        d: sf::OutAutoSelectBuffer<'_, u8>,
     ) -> Result<()> {
         diag_log!(LmLogger { LogSeverity::Trace, true } => "a: {}", a);
         diag_log!(LmLogger { LogSeverity::Trace, true } => "b: {}", b);
@@ -77,14 +77,12 @@ pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize 
 }
 
 #[no_mangle]
-pub fn main() -> Result<()> {
+pub fn main() {
     const POINTER_BUF_SIZE: usize = 0x400;
-    let mut manager: server::ServerManager<POINTER_BUF_SIZE> = server::ServerManager::new()?;
+    let mut manager: server::ServerManager<POINTER_BUF_SIZE> = server::ServerManager::new().unwrap();
 
-    manager.register_service_server::<DemoServiceServer>()?;
-    manager.loop_process()?;
-
-    Ok(())
+    manager.register_service_server::<DemoServiceServer>().unwrap();
+    manager.loop_process().unwrap();
 }
 
 #[panic_handler]

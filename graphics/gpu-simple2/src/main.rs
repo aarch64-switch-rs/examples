@@ -28,12 +28,11 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 type RGBType = nx::gpu::canvas::RGBA4;
 
 #[no_mangle]
-pub fn main() -> Result<()> {
+pub fn main() {
     
-
     let supported_tags =
         hid::NpadStyleTag::Handheld() | hid::NpadStyleTag::FullKey() | hid::NpadStyleTag::JoyDual();
-    let input_ctx = input::Context::new(supported_tags, 1)?;
+    let input_ctx = input::Context::new(supported_tags, 1).unwrap();
 
     let _c_empty = RGBType::new();
     let _c_white = RGBType::new_scaled(0xff, 0xff, 0xff, 0xff);
@@ -48,15 +47,15 @@ pub fn main() -> Result<()> {
                 gpu::NvDrvServiceKind::Applet,
                 gpu::ViServiceKind::System,
                 0x40000,
-            )?;
+            ).unwrap();
     let mut surface = match nx::gpu::canvas::CanvasManager::new_stray(
         Arc::new(RwLock::new(gpu_ctx)),
-        Some("Default"),
+        Default::default(),
         3,
         gpu::BlockLinearHeights::FourGobs,
     ) {
         Ok(s) => s,
-        Err(_e) => return Ok(()),
+        Err(e) => panic!("{:?}", e),
     };
 
     let mut frame: usize = 0;
@@ -153,7 +152,6 @@ pub fn main() -> Result<()> {
         let _ = surface.wait_vsync_event(None);
     }
 
-    Ok(())
 }
 
 #[panic_handler]

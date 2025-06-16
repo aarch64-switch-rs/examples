@@ -64,12 +64,10 @@ const POINTER_BUF_SIZE: usize = 0;
 type Manager = server::ServerManager<POINTER_BUF_SIZE>;
 
 #[no_mangle]
-pub fn main() -> Result<()> {
-    let mut manager = Manager::new()?;
-    manager.register_mitm_service_server::<PsmMitmServer>()?;
-    manager.loop_process()?;
-
-    Ok(())
+pub fn main() {
+    let mut manager = Manager::new().unwrap();
+    manager.register_mitm_service_server::<PsmMitmServer>().unwrap();
+    manager.loop_process().unwrap();
 }
 
 #[panic_handler]

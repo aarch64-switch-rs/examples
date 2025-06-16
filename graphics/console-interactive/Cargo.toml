@@ -1,0 +1,22 @@
+[package]
+name = "console-interactive"
+version = "0.1.0"
+authors = ["XorTroll"]
+edition = "2021"
+
+[dependencies.nx]
+workspace = true
+features = [
+    "input",
+    "canvas",
+    "truetype",
+    "fs",
+    "vty",
+    "rand",
+]
+
+[package.metadata.nx.nro]
+nacp = { default_name = "console-interactive", default_author = "XorTroll", version = "Example" }
+
+[dependencies]
+embedded-term = {version = "0.1.1", default-features = false}

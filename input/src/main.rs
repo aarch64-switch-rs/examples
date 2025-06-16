@@ -8,7 +8,6 @@ extern crate alloc;
 use nx::diag::abort;
 use nx::diag::log::lm::LmLogger;
 use nx::input;
-use nx::result::*;
 use nx::service::hid;
 use nx::svc;
 use nx::util;
@@ -27,7 +26,7 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 }
 
 #[no_mangle]
-pub fn main() -> Result<()> {
+pub fn main() {
     // Support all basic controller styles (pro-controller, handheld and joy-cons in single and dual modes)
     let supported_style_tags = hid::NpadStyleTag::FullKey()
         | hid::NpadStyleTag::Handheld()
@@ -35,7 +34,7 @@ pub fn main() -> Result<()> {
         | hid::NpadStyleTag::JoyLeft()
         | hid::NpadStyleTag::JoyRight();
 
-    let input_ctx = input::Context::new(supported_style_tags, 1)?;
+    let input_ctx = input::Context::new(supported_style_tags, 1).unwrap();
 
     // Track player 1 and handheld
     let mut p1 = input_ctx.get_player(hid::NpadIdType::No1);
@@ -54,10 +53,8 @@ pub fn main() -> Result<()> {
         }
 
         // Sleep 10ms (aka 10'000'000 ns)
-        svc::sleep_thread(10_000_000)?;
+        svc::sleep_thread(10_000_000).unwrap();
     }
-
-    Ok(())
 }
 
 #[panic_handler]

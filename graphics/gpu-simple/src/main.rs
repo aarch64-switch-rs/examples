@@ -18,7 +18,6 @@ use nx::gpu::canvas::Canvas;
 use nx::gpu::canvas::RGBA8;
 use nx::gpu::surface::Surface;
 use nx::input;
-use nx::result::*;
 use nx::service::hid;
 use nx::svc;
 use nx::sync::RwLock;
@@ -105,11 +104,11 @@ impl Square {
 }
 
 #[no_mangle]
-fn main() -> Result<()> {
+fn main() {
 
-    fs::initialize_fspsrv_session()?;
-    mount_sd_card("sdmc")?;
-    let mut log_file = fs::open_file("sdmc:/gpu-simple.log", FileOpenOption::Append() | FileOpenOption::Create() | FileOpenOption::Write())?;
+    fs::initialize_fspsrv_session().unwrap();
+    mount_sd_card("sdmc").unwrap();
+    let mut log_file = fs::open_file("sdmc:/gpu-simple.log", FileOpenOption::Append() | FileOpenOption::Create() | FileOpenOption::Write()).unwrap();
 
     let supported_style_tags = hid::NpadStyleTag::Handheld()
         | hid::NpadStyleTag::FullKey()
@@ -120,7 +119,7 @@ fn main() -> Result<()> {
         Ok(ok) => ok,
         Err(e) => {
             let _ = log_file.write_array(format!("Error getting input context: {:#X}", e.get_value()).as_bytes());
-            return Ok(());
+            return;
         }
     };
 
@@ -136,7 +135,7 @@ fn main() -> Result<()> {
             Ok(ok) => ok,
             Err(_e) => {
                 let _ = log_file.write_array("Error getting font: invalid_font".as_bytes());
-                return Ok(());
+                return;
             }
         };
 
@@ -149,20 +148,20 @@ fn main() -> Result<()> {
             Ok(ok) => ok,
             Err(e) => {
                 let _ = log_file.write_array(format!("Error getting gpu context: {:#X}", e.get_value()).as_bytes());
-                return Ok(());
+                return;
             }
         };
 
         match nx::gpu::canvas::CanvasManager::new_stray(
         alloc::sync::Arc::new(RwLock::new(gpu_ctx)),
-        Some("Default"),
+        Default::default(),
         3,
         gpu::BlockLinearHeights::FourGobs,
     ) {
         Ok(s) => s,
         Err(e) => {
             let _ = log_file.write_array(format!("Error getting canvas manager: {:#X}", e.get_value()).as_bytes());
-            return Ok(());
+            return;
     }}};
 
     'render: loop {
@@ -214,7 +213,6 @@ fn main() -> Result<()> {
         let _ = canvas_manager.wait_vsync_event(None);
     }
 
-    Ok(())
 }
 
 #[panic_handler]

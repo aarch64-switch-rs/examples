@@ -10,7 +10,6 @@ extern crate alloc;
 extern crate paste;
 
 use core::panic;
-use core::ptr::addr_of_mut;
 use nx::diag::abort;
 use nx::fs;
 use nx::ipc::server;
@@ -19,7 +18,7 @@ use nx::result::*;
 use nx::service;
 use nx::service::psc;
 use nx::service::psc::IPmModuleClient;
-use nx::service::psc::IPmServiceClient;
+use nx::service::psc::IPmClient;
 use nx::thread;
 use nx::util;
 use nx::wait;
@@ -35,18 +34,18 @@ static mut CUSTOM_HEAP: [u8; CUSTOM_HEAP_SIZE] = [0; CUSTOM_HEAP_SIZE];
 #[no_mangle]
 #[allow(static_mut_refs)] // :(
 pub fn initialize_heap(_hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
-    util::PointerAndSize::new(addr_of_mut!(CUSTOM_HEAP) as _, CUSTOM_HEAP_SIZE)
+    util::PointerAndSize::new(&raw mut CUSTOM_HEAP as _, CUSTOM_HEAP_SIZE)
 }
 
 pub fn pm_module_main() -> Result<()> {
-    let psc = service::new_service_object::<psc::PmService>()?;
-    let module = psc.get_pm_module()?;
+    let psc = service::new_service_object::<psc::PmService>().unwrap();
+    let module = psc.get_pm_module().unwrap();
 
-    let event_handle = module.initialize(psc::ModuleId::Lm, sf::Buffer::empty())?;
+    let event_handle = module.initialize(psc::ModuleId::Lm, sf::Buffer::from_array(&[])).unwrap();
     loop {
-        wait::wait_handles(&[event_handle.handle], -1)?;
+        wait::wait_handles(&[event_handle.handle], -1).unwrap();
 
-        let (state, _flags) = module.get_request()?;
+        let (state, _flags) = module.get_request().unwrap();
         match state {
             psc::State::FullAwake
             | psc::State::MinimumAwake
@@ -54,7 +53,7 @@ pub fn pm_module_main() -> Result<()> {
             _ => logger::G_ENABLED.store(false, core::sync::atomic::Ordering::Relaxed),
         };
 
-        module.acknowledge_ex(state)?;
+        module.acknowledge_ex(state).unwrap();
     }
 }
 
@@ -66,27 +65,27 @@ const POINTER_BUF_SIZE: usize = 0x400;
 type Manager = server::ServerManager<POINTER_BUF_SIZE>;
 
 #[no_mangle]
-pub fn main() -> Result<()> {
+pub fn main() {
     thread::set_current_thread_name("lm.Main");
-    fs::initialize_fspsrv_session()?;
-    fs::mount_sd_card("sdmc")?;
-    logger::initialize()?;
+    fs::initialize_fspsrv_session().expect("Error starting filesystem services");
+    fs::mount_sd_card("sdmc").expect("Failed to mount sd card");
+    logger::initialize().unwrap();
 
     let pm_module_thread = thread::Builder::new()
         .name("lm.PmModule")
         .stack_size(0x2000)
-        .spawn(|| pm_module_main())?;
+        .spawn(|| pm_module_main()).unwrap();
 
-    let mut manager = Manager::new()?;
-    manager.register_service_server::<ipc::LogService>()?;
-    manager.loop_process()?;
+    let mut manager = Manager::new().unwrap();
+    manager.register_service_server::<ipc::LogService>().unwrap();
+    manager.loop_process().unwrap();
 
     pm_module_thread
         .join()
-        .expect("PmModule thread panicked.")?;
+        .expect("PmModule thread panicked.")
+        .expect("PmModule returned an error.");
 
     fs::unmount_all();
-    Ok(())
 }
 
 #[panic_handler]

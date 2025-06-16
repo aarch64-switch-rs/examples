@@ -9,7 +9,6 @@ extern crate alloc;
 
 use nx::diag::abort;
 use nx::diag::log::{lm::LmLogger, LogSeverity};
-use nx::result::*;
 use nx::service;
 use nx::service::psm::IPsmClient;
 use nx::service::psm::PsmService;
@@ -30,13 +29,11 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 }
 
 #[no_mangle]
-pub fn main() -> Result<()> {
-    let psm = service::new_service_object::<PsmService>()?;
+pub fn main() {
+    let psm = service::new_service_object::<PsmService>().unwrap();
 
-    let battery_p = psm.get_battery_charge_percentage()?;
+    let battery_p = psm.get_battery_charge_percentage().unwrap();
     diag_log!(LmLogger { LogSeverity::Trace, true } => "Battery percentage value: {}%\n", battery_p);
-
-    Ok(())
 }
 
 #[panic_handler]

@@ -7,7 +7,6 @@ extern crate alloc;
 use nx::diag::abort;
 use nx::diag::log::{lm::LmLogger, LogSeverity};
 use nx::diag_log;
-use nx::result::*;
 use nx::svc;
 use nx::thread;
 use nx::util;
@@ -26,7 +25,7 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 }
 
 #[no_mangle]
-pub fn main() -> Result<()> {
+pub fn main() {
     diag_log!(LmLogger { LogSeverity::Trace, false } => "Starting threads...\n");
 
     let t1_args = (1, 2, 3, 'c', 'd', 'b', 'a');
@@ -56,7 +55,6 @@ pub fn main() -> Result<()> {
 
     diag_log!(LmLogger { LogSeverity::Trace, false } => "Done!\n");
 
-    Ok(())
 }
 
 #[panic_handler]

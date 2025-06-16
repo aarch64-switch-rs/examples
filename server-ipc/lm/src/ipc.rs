@@ -27,7 +27,7 @@ impl BinaryFileLogger {
 }
 
 impl ILoggerServer for BinaryFileLogger {
-    fn log(&mut self, log_buf: sf::InAutoSelectBuffer<u8>) -> Result<()> {
+    fn log(&mut self, log_buf: sf::InAutoSelectBuffer<'_, u8>) -> Result<()> {
         diag_log!(logger::SelfLogger { log::LogSeverity::Trace, false } => "Logging with buffer ({:p}, 0x{:X})", log_buf.get_address(), log_buf.get_size());
 
         logger::log_packet_buf(log_buf.get_address(), log_buf.get_size(), self.program_id);
@@ -62,7 +62,7 @@ impl ILoggingServer for LogService {
         &mut self,
         process_id: sf::ProcessId,
     ) -> Result<impl ILoggerServer + 'static + ISessionObject> {
-        let pminfo = service::new_service_object::<pm::InformationInterface>()?;
+        let pminfo = service::new_service_object::<pm::InformationInterfaceService>()?;
         let program_id = pminfo.get_program_id(process_id.process_id)?;
         diag_log!(logger::SelfLogger { log::LogSeverity::Trace, false } => "Opening logger for program ID 0x{:016X}", program_id.0);
 
