@@ -38,20 +38,20 @@ type Manager = server::ServerManager<POINTER_BUF_SIZE>;
 const TAKE_OVER_APP_ID: ncm::ProgramId = ncm::ProgramId(0x01006F8002326000);
 
 #[no_mangle]
-pub fn main() -> Result<()> {
+pub fn main() {
     thread::get_current_thread().name.set_str("ecs.Main");
-    fs::initialize_fspsrv_session()?;
-    fs::mount_sd_card("sdmc")?;
+    fs::initialize_fspsrv_session().expect("Error starting filesystem services");
+    fs::mount_sd_card("sdmc").expect("Failed to mount sd card");
 
-    let ldr_shel = nx::service::new_service_object::<nx::service::ldr::ShellInterface>()?;
+    let ldr_shel = nx::service::new_service_object::<nx::service::ldr::ShellInterface>().unwrap();
 
-    let handle = ldr_shel.get().atmosphere_register_external_code(TAKE_OVER_APP_ID)?;
+    let handle = ldr_shel.get().atmosphere_register_external_code(TAKE_OVER_APP_ID).unwrap();
 
     let subdir_ipc_fs = ::alloc::boxed::Box::new(nx::fs::subdir::FileSystem::new("sdmc:/dummy".to_string()));
 
-    let mut manager = Manager::new()?;
+    let mut manager = Manager::new().unwrap();
     manager.register_session(handle.handle, subdir_ipc_fs);
-    manager.loop_process()?;
+    manager.loop_process().unwrap();
 
     fs::finalize_fspsrv_session();
     Ok(())

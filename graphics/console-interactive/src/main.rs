@@ -35,7 +35,7 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 }
 
 #[no_mangle]
-fn main() -> Result<()> {
+fn main() {
     let mut console = {
         let gpu_ctx = match gpu::Context::new(
             gpu::NvDrvServiceKind::Applet,
@@ -53,9 +53,7 @@ fn main() -> Result<()> {
             gpu::BlockLinearHeights::FourGobs,
         ) {
             Ok(s) => s,
-            Err(_e) => {
-                return Ok(());
-            },
+            Err(e) => panic!("{}", e),
         };
 
         let width = surface.surface.width();
@@ -71,7 +69,7 @@ fn main() -> Result<()> {
         | hid::NpadStyleTag::JoyDual()
         | hid::NpadStyleTag::JoyLeft()
         | hid::NpadStyleTag::JoyRight();
-    let input_ctx = input::Context::new(supported_style_tags, 2)?;
+    let input_ctx = input::Context::new(supported_style_tags, 2).expect("Failed to create inpput context");
 
     let mut old_keyboard_state: KeyboardState = Default::default();
     'render: loop {
@@ -99,7 +97,7 @@ fn main() -> Result<()> {
             if old_keyboard_state.keys.is_up(key_down) {
                 // new key
                 if let Some(ansi_str) = key_down.get_ansi(){
-                    console.write_str(ansi_str);
+                    let _ = console.write_str(ansi_str);
                 };
             }
         }
@@ -109,7 +107,6 @@ fn main() -> Result<()> {
         let _ = thread::sleep(100_000);
     }
 
-    Ok(())
 }
 
 #[panic_handler]

@@ -7,7 +7,6 @@ use core::panic;
 use nx::diag::abort;
 use nx::diag::log::lm::LmLogger;
 use nx::ipc::sf;
-use nx::result::*;
 use nx::service;
 use nx::svc;
 use nx::util;
@@ -26,8 +25,8 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 }
 
 #[no_mangle]
-pub fn main() -> Result<()> {
-    let mut demo_service_client = service::new_service_object::<DemoService>()?;
+pub fn main() {
+    let mut demo_service_client = service::new_service_object::<DemoService>().unwrap();
 
     let demo = "demo";
     let mut omed = [0u8; 0x100];
@@ -37,9 +36,8 @@ pub fn main() -> Result<()> {
         0x82,
         sf::InAutoSelectBuffer::from_array(demo.as_bytes()),
         sf::OutAutoSelectBuffer::from_mut_array(&mut omed),
-    )?;
+    ).unwrap();
 
-    Ok(())
 }
 
 #[panic_handler]

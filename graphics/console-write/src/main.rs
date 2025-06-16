@@ -41,7 +41,7 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 }
 
 #[no_mangle]
-fn main() -> Result<()> {
+fn main() {
     let mut console: ScrollbackConsole = {
         let gpu_ctx = match gpu::Context::new(
             gpu::NvDrvServiceKind::Applet,
@@ -65,18 +65,18 @@ fn main() -> Result<()> {
         }
     };
 
-    fs::initialize_fspsrv_session()?;
-    mount_sd_card("sdmc")?;
-    let mut text_file = fs::open_file("sdmc:/lorem_ipsum", FileOpenOption::Read())?;
+    fs::initialize_fspsrv_session().unwrap();
+    mount_sd_card("sdmc").unwrap();
+    let mut text_file = fs::open_file("sdmc:/lorem_ipsum", FileOpenOption::Read()).unwrap();
 
     let supported_style_tags = hid::NpadStyleTag::Handheld()
         | hid::NpadStyleTag::FullKey()
         | hid::NpadStyleTag::JoyDual()
         | hid::NpadStyleTag::JoyLeft()
         | hid::NpadStyleTag::JoyRight();
-    let input_ctx = input::Context::new(supported_style_tags, 2)?;
+    let input_ctx = input::Context::new(supported_style_tags, 2).unwrap();
 
-    let mut rand = new_service_object::<nx::rand::RandomService>()?;
+    let mut rand = new_service_object::<nx::rand::RandomService>().unwrap();
 
     'render: loop {
         for controller in [hid::NpadIdType::Handheld, hid::NpadIdType::No1]
@@ -108,14 +108,12 @@ fn main() -> Result<()> {
 
         console.write(push_str);
 
-        console.draw()?;
+        console.draw().unwrap();
 
         let _ = console.wait_vsync_event(None);
 
-        thread::sleep(<RandomService as Rng>::random_range(&mut rand, 100..100000));
+        let _ = thread::sleep(<RandomService as Rng>::random_range(&mut rand, 100..100000));
     }
-
-    Ok(())
 }
 
 #[panic_handler]

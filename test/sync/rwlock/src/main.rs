@@ -31,12 +31,12 @@ nx::rrt0_initialize_heap!();
 type RGBType = nx::gpu::canvas::RGBA4;
 
 #[unsafe(no_mangle)]
-pub fn main() -> Result<()> {
+pub fn main() {
     let supported_tags =
         hid::NpadStyleTag::Handheld() | hid::NpadStyleTag::FullKey() | hid::NpadStyleTag::JoyDual();
     let input_ctx = match input::Context::new(supported_tags, 1) {
         Ok(ctx) => ctx,
-        Err(_e) => return Ok(()),
+        Err(e) => panic!("{:?}", e),
     };
 
     let _c_empty = RGBType::new();
@@ -50,7 +50,7 @@ pub fn main() -> Result<()> {
         0x40000,
     ){
         Ok(ctx) => ctx,
-        Err(_e) => return Ok(()),
+        Err(e) => panic!("{:?}", e),
     };
 
     let mut surface = match nx::gpu::canvas::CanvasManager::new_stray(
@@ -60,7 +60,7 @@ pub fn main() -> Result<()> {
         gpu::BlockLinearHeights::FourGobs,
     ) {
         Ok(s) => s,
-        Err(_e) => return Ok(()),
+        Err(e) => panic!("{:?}", e),
     };
 
     let mut frame: usize = 0;
@@ -75,7 +75,7 @@ pub fn main() -> Result<()> {
     let rand = if let Ok(rand) = new_service_object::<RandomService>() {
         Arc::new(rand)
     } else {
-        return Ok(());
+        return;
     };
 
     let _t1 = {
@@ -257,13 +257,9 @@ pub fn main() -> Result<()> {
         });
         let _ = surface.wait_vsync_event(None);
     }
-
-    Ok(())
 }
 
 #[panic_handler]
 fn panic_handler(_info: &panic::PanicInfo) -> ! {
-    //let panic_str = format!("{}", info);
     nx::diag::abort::abort(abort::AbortLevel::Panic(), nx::rc::ResultPanicked::make());
-    //util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::FatalThrow())
 }

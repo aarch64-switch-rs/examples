@@ -5,6 +5,7 @@ members = [
     "applet/libapplet-launch",
     "fs-api/*",
     "graphics/console-write",
+    "graphics/console-write-random",
     "graphics/console-interactive",
     "graphics/gpu-simple",
     "graphics/gpu-simple2",
@@ -21,10 +22,9 @@ members = [
 ]
 
 [workspace.dependencies.nx]
-#git = "https://github.com/aarch64-switch-rs/nx"
-#tag = "0.2.2"
-git = "https://github.com/pantsman0/nx"
-branch = "console_poc"
+git = "https://github.com/aarch64-switch-rs/nx"
+tag = "0.3.0"
+#branch = "master"
 
 [profile.release]
 debug = true

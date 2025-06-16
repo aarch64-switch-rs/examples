@@ -10,7 +10,6 @@ use nx::diag::abort;
 use nx::diag::log::lm::LmLogger;
 use nx::diag::log::LogSeverity;
 use nx::fs;
-use nx::result::*;
 use nx::svc;
 use nx::util;
 
@@ -28,15 +27,15 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 }
 
 #[no_mangle]
-pub fn main() -> Result<()> {
+pub fn main() {
     // Initializing this is not mandatory, but it's helpful for fs to automatically mount the SD by itself
-    fs::initialize_fspsrv_session()?;
-    fs::mount_sd_card("sdmc")?;
+    fs::initialize_fspsrv_session().expect("Error starting filesystem services");
+    fs::mount_sd_card("sdmc").expect("Failed to mount sd card");
 
     let mut dir = fs::open_directory(
         "sdmc:/",
         fs::DirectoryOpenMode::ReadDirectories() | fs::DirectoryOpenMode::ReadFiles(),
-    )?;
+    ).expect("Failed to open directory.");
     loop {
         if let Ok(Some(dd)) = dir.read_next() {
             diag_log!(LmLogger { LogSeverity::Trace, false } => "- {:?} ({:?})\n", dd.name, dd.entry_type);
@@ -46,7 +45,6 @@ pub fn main() -> Result<()> {
     }
 
     fs::unmount_all();
-    Ok(())
 }
 
 #[panic_handler]

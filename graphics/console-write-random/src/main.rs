@@ -42,7 +42,7 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 }
 
 #[no_mangle]
-fn main() -> Result<()> {
+fn main() {
     let mut console = {
         let gpu_ctx = match gpu::Context::new(
             gpu::NvDrvServiceKind::Applet,
@@ -60,9 +60,7 @@ fn main() -> Result<()> {
             gpu::BlockLinearHeights::FourGobs,
         ) {
             Ok(s) => s,
-            Err(_e) => {
-                return Ok(());
-            },
+            Err(e) => panic!("{}", e),
         };
 
         let width = surface.surface.width();
@@ -73,18 +71,18 @@ fn main() -> Result<()> {
         embedded_term::Console::on_text_buffer(text_buffer)
     };
 
-    fs::initialize_fspsrv_session()?;
-    mount_sd_card("sdmc")?;
-    let mut text_file = fs::open_file("sdmc:/lorem_ipsum", FileOpenOption::Read())?;
+    fs::initialize_fspsrv_session().unwrap();
+    mount_sd_card("sdmc").unwrap();
+    let mut text_file = fs::open_file("sdmc:/lorem_ipsum", FileOpenOption::Read()).unwrap();
 
     let supported_style_tags = hid::NpadStyleTag::Handheld()
         | hid::NpadStyleTag::FullKey()
         | hid::NpadStyleTag::JoyDual()
         | hid::NpadStyleTag::JoyLeft()
         | hid::NpadStyleTag::JoyRight();
-    let input_ctx = input::Context::new(supported_style_tags, 2)?;
+    let input_ctx = input::Context::new(supported_style_tags, 2).unwrap();
 
-    let mut rand = new_service_object::<nx::rand::RandomService>()?;
+    let mut rand = new_service_object::<nx::rand::RandomService>().unwrap();
 
     'render: loop {
         for controller in [hid::NpadIdType::Handheld, hid::NpadIdType::No1]
@@ -110,14 +108,13 @@ fn main() -> Result<()> {
 
         let push_str = String::from_utf8(read_buf).unwrap();
 
-        console.write_str(format!("\x1B[38;5;{}m", <RandomService as Rng>::random::<u8>(&mut rand)).as_str());
-        console.write_str(push_str.as_str());
+        let _ = console.write_str(format!("\x1B[38;5;{}m", <RandomService as Rng>::random::<u8>(&mut rand)).as_str());
+        let _ = console.write_str(push_str.as_str());
 
 
-        thread::sleep(<RandomService as Rng>::random_range(&mut rand, 100..100000));
+        let _ = thread::sleep(<RandomService as Rng>::random_range(&mut rand, 100..100000));
     }
 
-    Ok(())
 }
 
 #[panic_handler]
