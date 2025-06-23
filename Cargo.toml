@@ -11,6 +11,7 @@ members = [
     "graphics/gpu-simple2",
     "graphics/simple-window",
     "input",
+    "net/*",
     "os/*",
     "server-ipc/lm",
     "server-ipc/prepo-mitm",
@@ -23,8 +24,9 @@ members = [
 
 [workspace.dependencies.nx]
 git = "https://github.com/aarch64-switch-rs/nx"
-tag = "0.3.0"
-#branch = "master"
+#tag = "0.3.0"
+branch = "sockets"
+
 
 [profile.release]
 debug = true

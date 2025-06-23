@@ -5,7 +5,7 @@ authors = ["XorTroll"]
 edition = "2021"
 
 [dependencies]
-nx = { workspace = true, features = [ "services" ] }
+nx = { workspace = true, features = [ "applet" ] }
 
 [package.metadata.nx.nro]
 nacp = { default_name = "libapplet-launch", default_author = "XorTroll", version = "Example" }

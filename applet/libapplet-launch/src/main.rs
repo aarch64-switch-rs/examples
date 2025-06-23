@@ -8,16 +8,15 @@ use nx::arm;
 use nx::diag::abort;
 use nx::diag::log::lm::LmLogger;
 use nx::ipc::sf;
-use nx::service::applet;
-use nx::service::applet::ILibraryAppletAccessorClient;
-use nx::service::applet::ILibraryAppletCreatorClient;
-use nx::service::applet::IStorageClient;
-use nx::service::applet::IStorageAccessorClient;
-use nx::service::applet::ProxyCommon as _;
+use nx::applet;
+use applet::ILibraryAppletAccessorClient;
+use applet::ILibraryAppletCreatorClient;
+use applet::IStorageClient;
+use applet::IStorageAccessorClient;
+use applet::ProxyCommon as _;
 use nx::svc;
 use nx::util;
 use nx::wait;
-
 use core::ops::Deref;
 use core::panic;
 
