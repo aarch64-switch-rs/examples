@@ -8,8 +8,6 @@ edition = "2021"
 workspace = true
 features = [
     "input",
-    "canvas",
-    "truetype",
     "fs",
     "vty",
     "rand",

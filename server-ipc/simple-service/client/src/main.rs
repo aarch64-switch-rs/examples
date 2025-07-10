@@ -35,7 +35,7 @@ pub fn main() {
         0x7,
         0x82,
         sf::InAutoSelectBuffer::from_array(demo.as_bytes()),
-        sf::OutAutoSelectBuffer::from_mut_array(&mut omed),
+        sf::InOutAutoSelectBuffer::from_mut_array(&mut omed),
     ).unwrap();
 
 }

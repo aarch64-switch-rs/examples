@@ -1,0 +1,13 @@
+[package]
+name = "net-log"
+version = "0.1.0"
+authors = ["Pantsman0"]
+edition = "2024"
+
+[dependencies]
+log = "0.4.27"
+nx = { workspace = true , features = [ "input", "socket", "fs" ] }
+
+
+[package.metadata.nx.nro]
+nacp = { default_name = "net-log", default_author = "XorTroll", version = "Example" }

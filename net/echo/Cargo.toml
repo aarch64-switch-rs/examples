@@ -1,0 +1,12 @@
+[package]
+name = "echo-server"
+version = "0.1.0"
+authors = ["Pantsman0"]
+edition = "2024"
+
+[dependencies]
+nx = { workspace = true , features = [ "input", "socket", "fs" ] }
+
+
+[package.metadata.nx.nro]
+nacp = { default_name = "echo-server", default_author = "XorTroll", version = "Example" }

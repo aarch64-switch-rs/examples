@@ -9,7 +9,7 @@ use nx::{ipc_sf_define_default_client_for_interface, ipc_sf_define_interface_tra
 ipc_sf_define_default_client_for_interface!(DemoService);
 ipc_sf_define_interface_trait! {
     trait DemoService {
-        sample_command [999, version::VersionInterval::all(), mut ]: (a: u32, b: u64, c: sf::InAutoSelectBuffer<'_, u8>, d: sf::OutAutoSelectBuffer<'_, u8>) => () ();
+        sample_command [999, version::VersionInterval::all(), mut ]: (a: u32, b: u64, c: sf::InAutoSelectBuffer<'_, u8>, d: sf::InOutAutoSelectBuffer<'_, u8>) => () ();
     }
 }
 

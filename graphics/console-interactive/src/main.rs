@@ -6,7 +6,7 @@ use alloc::format;
 use alloc::sync::Arc;
 
 use embedded_term::TextOnGraphic;
-use nx::console::vty::PersistantBufferedCanvas;
+use nx::console::vty::PersistentBufferedCanvas;
 use nx::diag::abort;
 use nx::gpu;
 use nx::input;
@@ -36,7 +36,7 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 
 #[no_mangle]
 fn main() {
-    let mut console = {
+    let mut console: nx::console::vty::TextBufferConsole = {
         let gpu_ctx = match gpu::Context::new(
             gpu::NvDrvServiceKind::Applet,
             gpu::ViServiceKind::System,
@@ -59,7 +59,7 @@ fn main() {
         let width = surface.surface.width();
         let height = surface.surface.height() ;
 
-        let text_buffer = TextOnGraphic::new(PersistantBufferedCanvas::new(surface), width, height);
+        let text_buffer = TextOnGraphic::new(PersistentBufferedCanvas::new(surface), width, height);
 
         embedded_term::Console::on_text_buffer(text_buffer)
     };

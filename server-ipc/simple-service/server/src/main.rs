@@ -30,7 +30,7 @@ impl IDemoServiceServer for DemoServiceServer {
         a: u32,
         b: u64,
         c: sf::InAutoSelectBuffer<'_, u8>,
-        d: sf::OutAutoSelectBuffer<'_, u8>,
+        d: sf::InOutAutoSelectBuffer<'_, u8>,
     ) -> Result<()> {
         diag_log!(LmLogger { LogSeverity::Trace, true } => "a: {}", a);
         diag_log!(LmLogger { LogSeverity::Trace, true } => "b: {}", b);
