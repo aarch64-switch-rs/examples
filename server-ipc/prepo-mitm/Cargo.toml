@@ -7,6 +7,7 @@ edition = "2021"
 [dependencies]
 nx = { workspace = true, features = [ "fs" ] }
 paste = "1.0"
+static_assertions = "1.1.0"
 
 [package.metadata.nx.nsp.npdm]
 name = "prepo-mitm"

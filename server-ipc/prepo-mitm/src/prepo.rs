@@ -6,6 +6,8 @@ use nx::ipc::sf::sm;
 use nx::result::*;
 use nx::version;
 
+
+
 // TODO: move this interface to nx libs (and finish it)...
 
 ipc_sf_define_default_client_for_interface!(PrepoService);
@@ -34,18 +36,13 @@ pub const SERVICE_TYPE_SYSTEM: u32 = 5;
 #[inline]
 fn get_service_name<const S: u32>() -> &'static str {
     match S {
-        SERVICE_TYPE_ADMIN => nul!("prepo:a"),
-        SERVICE_TYPE_ADMIN2 => nul!("prepo:a2"),
-        SERVICE_TYPE_MANAGER => nul!("prepo:m"),
-        SERVICE_TYPE_USER => nul!("prepo:u"),
-        SERVICE_TYPE_SYSTEM => nul!("prepo:s"),
-        _ => nul!(""),
+        SERVICE_TYPE_ADMIN => "prepo:a",
+        SERVICE_TYPE_ADMIN2 => "prepo:a2",
+        SERVICE_TYPE_MANAGER => "prepo:m",
+        SERVICE_TYPE_USER => "prepo:u",
+        SERVICE_TYPE_SYSTEM => "prepo:s",
+        _ => panic!("Invalid service mode."),
     }
-}
-
-#[inline]
-fn get_non_null_service_name<const S: u32>() -> &'static str {
-    get_service_name::<S>().trim_matches('\0')
 }
 
 #[derive(Debug)]
@@ -302,7 +299,7 @@ impl<const S: u32> server::ISessionObject for PrepoServiceMitmServer<S> {
 
 impl<const S: u32> server::IMitmServerObject for PrepoServiceMitmServer<S> {
     fn new(info: sm::mitm::MitmProcessInfo) -> Self {
-        diag_log!(LmLogger { LogSeverity::Info, true } => "Opened '{}' from program {:#X}\n", get_non_null_service_name::<S>(), info.program_id.0);
+        diag_log!(LmLogger { LogSeverity::Info, true } => "Opened '{}' from program {:#X}\n", get_service_name::<S>(), info.program_id.0);
         Self { _info: info }
     }
 }
@@ -310,7 +307,7 @@ impl<const S: u32> server::IMitmServerObject for PrepoServiceMitmServer<S> {
 impl<const S: u32> server::IMitmService for PrepoServiceMitmServer<S> {
     fn get_name() -> sm::ServiceName {
         let name = get_service_name::<S>();
-        diag_log!(LmLogger { LogSeverity::Info, true } => "Registering mitm at service '{}'...\n", get_non_null_service_name::<S>());
+        diag_log!(LmLogger { LogSeverity::Info, true } => "Registering mitm at service '{}'...\n", name);
         sm::ServiceName::new(name)
     }
 

@@ -6,13 +6,13 @@ extern crate alloc;
 use core::net::Ipv4Addr;
 use core::panic;
 
-use alloc::format;
+use core::fmt::Write;
 use nx::diag::abort;
 use nx::diag::log::lm::LmLogger;
 use nx::fs::{self, FileOpenOption};
 
 use nx::service::hid;
-use nx::socket::net::TcpListener;
+use nx::socket::net::{TcpListener, traits::SocketCommon};
 use nx::{input, svc, thread, util};
 
 nx::rrt0_define_module_name!("echo-server");
@@ -47,9 +47,7 @@ fn main() {
     let input_ctx = match input::Context::new(supported_style_tags, 1) {
         Ok(ok) => ok,
         Err(e) => {
-            let _ = log_file.write_array(
-                format!("Error getting input context: {:#X}\n", e.get_value()).as_bytes(),
-            );
+            let _ = write!(log_file, "Error getting input context: {:#X}\n", e.get_value());
             return;
         }
     };
@@ -59,71 +57,56 @@ fn main() {
         Default::default(),
         None,
     ) {
-        let _ = log_file.write_array(
-            format!(
+        let _ = write!(log_file, 
                 "Error initializing socket service: {}-{}\n",
                 e.get_module(),
                 e.get_description()
-            )
-            .as_bytes(),
-        );
+            );
         return;
     }
 
-    let listener = match TcpListener::bind(Ipv4Addr::from_bits(0), 4660) {
+    let listener = match TcpListener::bind(Ipv4Addr::UNSPECIFIED, 4660) {
         Ok(l) => l,
         Err(e) => {
-            let _ = log_file.write_array(
-                format!(
+            let _ = write!(log_file, 
                     "Error creating listener: {}-{}\n",
                     e.get_module(),
                     e.get_description()
-                )
-                .as_bytes(),
-            );
+                );
             return;
         }
     };
 
-    match listener.get_socket_name() {
+    match listener.local_addr() {
         Ok(socket) => {
-            let _ = log_file.write_array(format!("{:?}", socket).as_bytes());
+            let _ = write!(log_file, "Listening for TCP connections. Local Address: {:?}\n", socket);
         },
         Err(e) => {
-            let _ = log_file.write_array(
-                format!(
-                    "Error gettting socket name: {}-{}\n",
+            let _ = write!(log_file, 
+                    "Error getting socket name: {}-{}\n",
                     e.get_module(),
                     e.get_description()
-                )
-                .as_bytes(),
             );
             return;
         }
     }
 
-    let (mut stream, remote_addr) = match listener.accept() {
+    let (stream, remote_addr) = match listener.accept() {
         Ok(s) => s,
         Err(e) => {
-            let _ = log_file.write_array(
-                format!(
+            let _ = write!(log_file, 
                     "Error accepting connection: {}-{}\n",
                     e.get_module(),
                     e.get_description()
-                )
-                .as_bytes(),
-            );
+                );
             return;
         }
     };
 
-    let _ = log_file.write_array(
-        format!(
+    let _ = write!(log_file, 
             "received connection: IP - {}\n",
             Ipv4Addr::from_bits(u32::from_be_bytes(remote_addr.addr))
-        )
-        .as_bytes(),
-    );
+        );
 
     let mut read_buf = [0u8; 0x200];
     loop {
@@ -142,24 +125,19 @@ fn main() {
         }
 
         match stream.recv_non_blocking(&mut read_buf) {
-            Ok(read_len)  if read_len > 0 => {
-                let _ = log_file.write_array("read data from the network: ".as_bytes());
-                let _ = log_file.write_array(&read_buf[..read_len]);
-                let _ = log_file.write_array(b"\n");
+            Ok(Some(read_len))  if read_len > 0 => {
+                let _ = write!(log_file, "read data from the network: {:?}\n", &read_buf[..read_len]);
                 let _ = stream.send_non_blocking(&read_buf[..read_len]);
             },
             Ok(_) => {
                 let _  = thread::sleep(10_000);
             },
             Err(e) => {
-                let _ = log_file.write_array(
-                    format!(
+                let _ = write!(log_file, 
                         "Error accepting connection: {}-{}\n",
                         e.get_module(),
                         e.get_description()
-                    )
-                    .as_bytes(),
-                );
+                    );
                 break;
             }
         }

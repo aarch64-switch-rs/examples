@@ -9,4 +9,4 @@ nx = { workspace = true, features = [ "services" ] }
 unwinding ={ version = "0.2.6", default-features = false, features = ["panic"]}
 
 [package.metadata.nx.nro]
-nacp = { default_name = "threads", default_author = "XorTroll", version = "Example" }
+nacp = { default_name = "thread_panic", default_author = "XorTroll", version = "Example" }

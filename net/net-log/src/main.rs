@@ -10,6 +10,7 @@ use nx::result::Result;
 use nx::diag::abort;
 use nx::diag::log::lm::LmLogger;
 
+use nx::socket::net::traits::SocketCommon;
 use nx::socket::net::UdpSocket;
 use nx::sync::Mutex;
 use nx::{svc, util};
@@ -56,7 +57,7 @@ fn init_logger() -> Result<()> {
 
     nx::socket::initialize(nx::socket::BsdSrvkind::User, Default::default(), None)?;
 
-    *log_handle = Some(nx::socket::net::UdpSocket::connect((LOG_HOST, LOG_PORT))?);
+    *log_handle = Some(nx::socket::net::UdpSocket::connect(LOG_HOST, LOG_PORT)?);
 
     Ok(())
 }
