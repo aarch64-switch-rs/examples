@@ -6,7 +6,7 @@ edition = "2021"
 
 [dependencies]
 embedded-term = "0.1.1"
-nx = { workspace = true , features = [ "input", "canvas", "truetype", "fs", "vty", "rand" ] }
+nx = { workspace = true , features = [ "input", "fs", "vty", "rand" ] }
 
 [package.metadata.nx.nro]
 nacp = { default_name = "console-write-random", default_author = "XorTroll", version = "Example" }

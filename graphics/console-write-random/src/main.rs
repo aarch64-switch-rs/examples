@@ -8,7 +8,7 @@ use alloc::sync::Arc;
 use alloc::vec;
 
 use embedded_term::TextOnGraphic;
-use nx::console::vty::PersistantBufferedCanvas;
+use nx::console::vty::PersistentBufferedCanvas;
 use nx::diag::abort;
 use nx::fs;
 use nx::fs::mount_sd_card;
@@ -66,7 +66,7 @@ fn main() {
         let width = surface.surface.width();
         let height = surface.surface.height() ;
 
-        let text_buffer = TextOnGraphic::new(PersistantBufferedCanvas::new(surface), width, height);
+        let text_buffer = TextOnGraphic::new(PersistentBufferedCanvas::new(surface), width, height);
 
         embedded_term::Console::on_text_buffer(text_buffer)
     };
