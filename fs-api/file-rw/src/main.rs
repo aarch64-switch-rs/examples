@@ -9,6 +9,7 @@ use nx::diag::log::lm::LmLogger;
 use nx::fs;
 use nx::svc;
 use nx::util;
+use nx::fs::Write;
 
 use core::panic;
 
@@ -38,7 +39,7 @@ pub fn main() {
         "sdmc:/fs-test-log.log",
         fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append(),
     ).expect("Failed to open log file.");
-    log_file.write_array(nro_magic_msg.as_bytes()).expect("Log file write failed.");
+    log_file.write_all(nro_magic_msg.as_bytes()).expect("Log file write failed.");
 
     fs::unmount_all();
 }

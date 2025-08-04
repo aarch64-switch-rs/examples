@@ -4,6 +4,7 @@ use alloc::string::String;
 use nx::arm;
 use nx::diag::log;
 use nx::fs;
+use nx::fs::Write;
 use nx::result::*;
 use nx::thread;
 
@@ -42,23 +43,26 @@ fn log_packet_buf_impl(
     log_dir: String,
     log_buf_file: String,
 ) -> Result<()> {
-    unsafe {
-        if G_ENABLED.load(core::sync::atomic::Ordering::Relaxed) {
-            let _ = fs::create_directory(BASE_LOG_DIR);
-            let _ = fs::create_directory(log_dir.as_str());
+    if G_ENABLED.load(core::sync::atomic::Ordering::Relaxed) {
+        let _ = fs::create_directory(BASE_LOG_DIR);
+        let _ = fs::create_directory(log_dir.as_str());
 
-            let _ = fs::remove_file(log_buf_file.as_str());
+        let _ = fs::remove_file(log_buf_file.as_str());
 
-            let mut log_file = fs::open_file(
-                log_buf_file.as_str(),
-                fs::FileOpenOption::Create()
-                    | fs::FileOpenOption::Write()
-                    | fs::FileOpenOption::Append(),
-            )?;
-            log_file.write_val(&bin_header)?;
-            log_file.write_array(core::slice::from_raw_parts(packet_buf, packet_buf_size))?;
-        }
+        let mut log_file = fs::open_file(
+            log_buf_file.as_str(),
+            fs::FileOpenOption::Create()
+                | fs::FileOpenOption::Write()
+                | fs::FileOpenOption::Append(),
+        )?;
+        log_file.write_all(unsafe {
+            core::mem::transmute::<&LogBinaryHeader, &[u8; size_of::<LogBinaryHeader>()]>(
+                &bin_header,
+            )
+        })?;
+        log_file.write_all(unsafe { core::slice::from_raw_parts(packet_buf, packet_buf_size) })?;
     }
+
     Ok(())
 }
 
@@ -73,7 +77,7 @@ fn log_self_impl(self_msg: String, log_dir: String, log_buf_file: String) -> Res
                 | fs::FileOpenOption::Write()
                 | fs::FileOpenOption::Append(),
         )?;
-        log_file.write_array(self_msg.as_bytes())?;
+        log_file.write_all(self_msg.as_bytes())?;
     }
     Ok(())
 }
