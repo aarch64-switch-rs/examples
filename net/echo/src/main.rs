@@ -32,7 +32,6 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
 fn main() {
     fs::initialize_fspsrv_session().expect("Error starting filesystem services");
     fs::mount_sd_card("sdmc").expect("Failed to mount sd card");
-    fs::mount_sd_card("sdmc").unwrap();
     let mut log_file = fs::open_file(
         "sdmc:/echo-server.log",
         FileOpenOption::Append() | FileOpenOption::Create() | FileOpenOption::Write(),
@@ -56,6 +55,7 @@ fn main() {
         nx::service::bsd::BsdSrvkind::System,
         Default::default(),
         None,
+        nx::socket::Paralellism::One
     ) {
         let _ = write!(log_file, 
                 "Error initializing socket service: {}-{}\n",

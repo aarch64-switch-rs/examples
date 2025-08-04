@@ -6,12 +6,12 @@ extern crate alloc;
 use core::net::Ipv4Addr;
 use core::panic;
 
-use nx::result::Result;
 use nx::diag::abort;
 use nx::diag::log::lm::LmLogger;
+use nx::result::Result;
 
-use nx::socket::net::traits::SocketCommon;
 use nx::socket::net::UdpSocket;
+use nx::socket::net::traits::SocketCommon;
 use nx::sync::Mutex;
 use nx::{svc, util};
 
@@ -28,7 +28,7 @@ pub fn initialize_heap(hbl_heap: util::PointerAndSize) -> util::PointerAndSize {
     }
 }
 
-static LOG_HOST: Ipv4Addr = Ipv4Addr::new(10,0,0,65);
+static LOG_HOST: Ipv4Addr = Ipv4Addr::new(10, 0, 0, 65);
 static LOG_PORT: u16 = 5001;
 
 pub struct LogImpl;
@@ -41,21 +41,29 @@ impl log::Log for LogImpl {
     fn log(&self, record: &log::Record) {
         let mut handle = LOG_STATIC.lock();
         if let Some(writer) = handle.as_mut() {
-            let _ = core::fmt::write(writer, format_args!("{} - {}", record.level(), record.args()));
+            let _ = core::fmt::write(
+                writer,
+                format_args!("{} - {}", record.level(), record.args()),
+            );
         }
-        
     }
-    fn flush(&self) {
-    }
+    fn flush(&self) {}
 }
 
 static LOG_STATIC: Mutex<Option<UdpSocket>> = Mutex::new(None);
 
 fn init_logger() -> Result<()> {
     let mut log_handle = LOG_STATIC.lock();
-    if log_handle.is_some() {return Ok(());}
+    if log_handle.is_some() {
+        return Ok(());
+    }
 
-    nx::socket::initialize(nx::socket::BsdSrvkind::User, Default::default(), None)?;
+    nx::socket::initialize(
+        nx::socket::BsdSrvkind::User,
+        Default::default(),
+        None,
+        nx::socket::Paralellism::One,
+    )?;
 
     *log_handle = Some(nx::socket::net::UdpSocket::connect(LOG_HOST, LOG_PORT)?);
 

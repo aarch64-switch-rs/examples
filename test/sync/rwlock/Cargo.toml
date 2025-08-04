@@ -7,4 +7,4 @@ edition = "2024"
 nx = { workspace = true, features = [ "input", "truetype", "fs", "rand" ] }
 
 [package.metadata.nx.nro]
-nacp = { default_name = "rwlock-dealock-test", default_author = "XorTroll", version = "Example" }
+nacp = { default_name = "rwlock-dealock-test", default_author = "Pantsman0", version = "Example" }

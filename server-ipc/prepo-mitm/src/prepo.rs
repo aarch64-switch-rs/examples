@@ -1,5 +1,5 @@
 use nx::diag::log::{lm::LmLogger, LogSeverity};
-use nx::fs;
+use nx::fs::{self, Write};
 use nx::ipc::server;
 use nx::ipc::sf;
 use nx::ipc::sf::sm;
@@ -89,7 +89,7 @@ impl<const S: u32> PrepoServiceMitmServer<S> {
             fs::FileOpenOption::Create() | fs::FileOpenOption::Write() | fs::FileOpenOption::Append(),
         ) {
             msgpack_file
-                .write_array(ctx.report_msgpack_buf.as_slice().unwrap())
+                .write_all(ctx.report_msgpack_buf.as_slice().unwrap())
                 .unwrap();
         }
 

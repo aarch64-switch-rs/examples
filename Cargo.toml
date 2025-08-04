@@ -24,7 +24,7 @@ members = [
 
 [workspace.dependencies.nx]
 git = "https://github.com/aarch64-switch-rs/nx"
-tag = "0.4.0"
+tag = "0.5.0"
 
 [profile.release]
 debug = true

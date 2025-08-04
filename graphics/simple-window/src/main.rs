@@ -19,6 +19,7 @@ use nx::sync::RwLock;
 use nx::util;
 use nx::{fs, gpu};
 
+use core::fmt::Write;
 use core::panic;
 
 
@@ -60,7 +61,7 @@ pub fn main() {
         ) {
             Ok(ok) => ok,
             Err(e) => {
-                let _ = file.write_array(format!("Error getting gpu context: {}\n", e).as_bytes());
+                let _ = file.write_fmt(format_args!("Error getting gpu context: {}\n", e));
                 return;
             }
         },
@@ -71,7 +72,7 @@ pub fn main() {
     let input_ctx = match input::Context::new(supported_tags, 1) {
         Ok(ok) => ok,
         Err(e) => {
-            let _ = file.write_array(format!("Error getting input context: {}\n", e).as_bytes());
+            let _ = file.write_fmt(format_args!("Error getting input context: {}\n", e));
             return;
         }
     };
@@ -101,7 +102,7 @@ pub fn main() {
     ) {
         Ok(ok) => ok,
         Err(e) => {
-            let _ = file.write_array(format!("Error getting surface: {}\n", e).as_bytes());
+            let _ = file.write_fmt(format_args!("Error getting surface: {}\n", e));
             return;
         }
     };
@@ -118,12 +119,11 @@ pub fn main() {
             if buttons_down.contains(hid::NpadButton::X()) {
                 layer_visible = !layer_visible;
                 if let Err(e) = surface.surface.set_visible(layer_visible) {
-                    let _ = file.write_array(
-                        format!(
+                    let _ = file.write_fmt(
+                        format_args!(
                             "Error setting surface visibility to {}: {}\n",
                             layer_visible, e
                         )
-                        .as_bytes(),
                     );
                 }
             } else if buttons_down.contains(hid::NpadButton::Plus()) {
