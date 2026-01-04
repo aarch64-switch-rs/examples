@@ -118,7 +118,7 @@ fn main() {
     let input_ctx = match input::Context::new(supported_style_tags, 2) {
         Ok(ok) => ok,
         Err(e) => {
-            let _ = log_file.write_array(format!("Error getting input context: {:#X}", e.get_value()).as_bytes());
+            let _ = log_file.write_array::<_, true>(format!("Error getting input context: {:#X}", e.get_value()).as_bytes());
             return;
         }
     };
@@ -134,7 +134,7 @@ fn main() {
         {
             Ok(ok) => ok,
             Err(_e) => {
-                let _ = log_file.write_array("Error getting font: invalid_font".as_bytes());
+                let _ = log_file.write_array::<_, true>("Error getting font: invalid_font".as_bytes());
                 return;
             }
         };
@@ -147,7 +147,7 @@ fn main() {
         ) {
             Ok(ok) => ok,
             Err(e) => {
-                let _ = log_file.write_array(format!("Error getting gpu context: {:#X}", e.get_value()).as_bytes());
+                let _ = log_file.write_array::<_, true>(format!("Error getting gpu context: {:#X}", e.get_value()).as_bytes());
                 return;
             }
         };
@@ -160,7 +160,7 @@ fn main() {
     ) {
         Ok(s) => s,
         Err(e) => {
-            let _ = log_file.write_array(format!("Error getting canvas manager: {:#X}", e.get_value()).as_bytes());
+            let _ = log_file.write_array::<_, true>(format!("Error getting canvas manager: {:#X}", e.get_value()).as_bytes());
             return;
     }}};
 

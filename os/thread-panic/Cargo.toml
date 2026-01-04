@@ -1,5 +1,5 @@
 [package]
-name = "thread_panic"
+name = "thread-panic"
 version = "0.1.0"
 authors = ["Pantsman0"]
 edition = "2021"

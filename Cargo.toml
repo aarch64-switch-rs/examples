@@ -3,7 +3,8 @@ resolver = "2"
 
 members = [
     "applet/libapplet-launch",
-    "fs-api/*",
+    "fs-api/dir-list",
+    "fs-api/file-rw",
     "graphics/console-write",
     "graphics/console-write-random",
     "graphics/console-interactive",
@@ -11,15 +12,18 @@ members = [
     "graphics/gpu-simple2",
     "graphics/simple-window",
     "input",
-    "net/*",
-    "os/*",
+    "net/chat",
+    "net/echo",
+    "net/net-log",
+    "os/threads",
+    "os/thread-panic",
+    "os/sync/rwlock",
     "server-ipc/lm",
     "server-ipc/prepo-mitm",
     "server-ipc/simple-mitm-service/client",
     "server-ipc/simple-mitm-service/server",
     "server-ipc/simple-service/client",
     "server-ipc/simple-service/server",
-    "test/sync/rwlock",
 ]
 
 [workspace.dependencies.nx]

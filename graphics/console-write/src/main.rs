@@ -67,7 +67,11 @@ fn main() {
 
     fs::initialize_fspsrv_session().unwrap();
     mount_sd_card("sdmc").unwrap();
-    let mut text_file = fs::open_file("sdmc:/lorem_ipsum", FileOpenOption::Read()).unwrap();
+    let mut text_file_opt = fs::open_file("sdmc:/lorem_ipsum", FileOpenOption::Read()).ok();
+
+    if text_file_opt.is_none() {
+        let _ = console.write("Failed to open lorem_ipsum file on sdmc:/\n");
+    }
 
     let supported_style_tags = hid::NpadStyleTag::Handheld()
         | hid::NpadStyleTag::FullKey()
@@ -97,10 +101,12 @@ fn main() {
         }
 
         let mut read_buf = vec![0u8; <RandomService as Rng>::random_range(&mut rand, 1..8)];
-        match text_file.read_array(read_buf.as_mut_slice()) {
-            Ok(read_size) => read_buf.truncate(read_size),
-            Err(_) => {
-                continue;
+        if let Some(text_file) = &mut text_file_opt {
+            match text_file.read_array(read_buf.as_mut_slice()) {
+                Ok(read_size) => read_buf.truncate(read_size),
+                Err(_) => {
+                    continue;
+                }
             }
         }
 

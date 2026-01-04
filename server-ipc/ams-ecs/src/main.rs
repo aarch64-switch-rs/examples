@@ -17,7 +17,7 @@ use nx::ipc::server;
 use nx::ipc::sf::ncm;
 use nx::fs;
 use core::panic;
-use nx::ipc::sf::ldr::IShellInterface;
+use nx::ipc::sf::ldr::IShellInterfaceClient;
 
 rrt0_define_default_module_name!();
 
@@ -39,22 +39,20 @@ const TAKE_OVER_APP_ID: ncm::ProgramId = ncm::ProgramId(0x01006F8002326000);
 
 #[no_mangle]
 pub fn main() {
-    thread::get_current_thread().name.set_str("ecs.Main");
+    thread::set_current_thread_name("ecs.Main");
     fs::initialize_fspsrv_session().expect("Error starting filesystem services");
     fs::mount_sd_card("sdmc").expect("Failed to mount sd card");
 
-    let ldr_shel = nx::service::new_service_object::<nx::service::ldr::ShellInterface>().unwrap();
+    let mut ldr_shel = nx::service::new_service_object::<nx::service::ldr::ShellInterfaceService>().unwrap();
 
-    let handle = ldr_shel.get().atmosphere_register_external_code(TAKE_OVER_APP_ID).unwrap();
+    let handle = ldr_shel.atmosphere_register_external_code(TAKE_OVER_APP_ID).unwrap();
 
-    let subdir_ipc_fs = ::alloc::boxed::Box::new(nx::fs::subdir::FileSystem::new("sdmc:/dummy".to_string()));
+    let sd_fs = fs::get_path_filesystem("sdmc:").unwrap();
+    let subdir_ipc_fs = ::alloc::boxed::Box::new(nx::fs::subdir::SubDir::new(sd_fs, "/dummy".to_string()));
 
     let mut manager = Manager::new().unwrap();
     manager.register_session(handle.handle, subdir_ipc_fs);
     manager.loop_process().unwrap();
-
-    fs::finalize_fspsrv_session();
-    Ok(())
 }
 
 #[panic_handler]
