@@ -15,15 +15,14 @@ use nx::fs::mount_sd_card;
 use nx::fs::FileOpenOption;
 use nx::gpu;
 use nx::input;
-use nx::rand::RandomService;
-use nx::rand::Rng;
 use nx::result::*;
 use nx::service::hid;
-use nx::service::new_service_object;
 use nx::svc;
 use nx::sync::RwLock;
 use nx::thread;
 use nx::util;
+
+use rand::RngExt;
 
 use core::fmt::Write;
 use core::panic;
@@ -64,7 +63,7 @@ fn main() {
         };
 
         let width = surface.surface.width();
-        let height = surface.surface.height() ;
+        let height = surface.surface.height();
 
         let text_buffer = TextOnGraphic::new(PersistentBufferedCanvas::new(surface), width, height);
 
@@ -86,7 +85,8 @@ fn main() {
         | hid::NpadStyleTag::JoyRight();
     let input_ctx = input::Context::new(supported_style_tags, 2).unwrap();
 
-    let mut rand = new_service_object::<nx::rand::RandomService>().unwrap();
+    nx::rand::initialize().unwrap();
+    let mut rand = nx::rand::get_rng().unwrap();
 
     'render: loop {
         for controller in [hid::NpadIdType::Handheld, hid::NpadIdType::No1]
@@ -102,7 +102,7 @@ fn main() {
             }
         }
 
-        let mut read_buf = vec![0u8; <RandomService as Rng>::random_range(&mut rand, 1..8)];
+        let mut read_buf = vec![0u8; rand.random_range(1..8)];
         if let Some(text_file) = &mut text_file_opt {
             match text_file.read_array(read_buf.as_mut_slice()) {
                 Ok(read_size) => read_buf.truncate(read_size),
@@ -114,17 +114,14 @@ fn main() {
 
         let push_str = String::from_utf8(read_buf).unwrap();
 
-        let _ = console.write_str(format!("\x1B[38;5;{}m", <RandomService as Rng>::random::<u8>(&mut rand)).as_str());
+        let _ = console.write_str(format!("\x1B[38;5;{}m", rand.random::<u8>()).as_str());
         let _ = console.write_str(push_str.as_str());
 
-
-        let _ = thread::sleep(<RandomService as Rng>::random_range(&mut rand, 100..100000));
+        let _ = thread::sleep(rand.random_range(100..100000));
     }
-
 }
 
 #[panic_handler]
-fn panic_handler(info: &panic::PanicInfo) -> ! {
-    let _info_message = format!("{}", info);
-    nx::diag::abort::abort(abort::AbortLevel::Panic(), nx::rc::ResultPanicked::make());
+fn panic_handler(_info: &panic::PanicInfo) -> ! {
+    nx::diag::abort::abort(abort::AbortLevel::Panic(), nx::rc::ResultPanicked::make())
 }

@@ -2,7 +2,6 @@
 #![no_main]
 
 extern crate alloc;
-use alloc::format;
 use alloc::sync::Arc;
 
 use embedded_term::TextOnGraphic;
@@ -57,7 +56,7 @@ fn main() {
         };
 
         let width = surface.surface.width();
-        let height = surface.surface.height() ;
+        let height = surface.surface.height();
 
         let text_buffer = TextOnGraphic::new(PersistentBufferedCanvas::new(surface), width, height);
 
@@ -69,7 +68,8 @@ fn main() {
         | hid::NpadStyleTag::JoyDual()
         | hid::NpadStyleTag::JoyLeft()
         | hid::NpadStyleTag::JoyRight();
-    let input_ctx = input::Context::new(supported_style_tags, 2).expect("Failed to create inpput context");
+    let input_ctx =
+        input::Context::new(supported_style_tags, 2).expect("Failed to create inpput context");
 
     let mut old_keyboard_state: KeyboardState = Default::default();
     'render: loop {
@@ -88,29 +88,28 @@ fn main() {
                 // Exit if Plus/+ is pressed.
                 break 'render;
             }
-
         }
 
-        let keyboard_state= input_ctx.get_player(hid::NpadIdType::Handheld).get_keyboard_state();
+        let keyboard_state = input_ctx
+            .get_player(hid::NpadIdType::Handheld)
+            .get_keyboard_state();
 
         for key_down in keyboard_state.keys.clone() {
             if old_keyboard_state.keys.is_up(key_down) {
                 // new key
-                if let Some(ansi_str) = key_down.get_ansi(){
+                if let Some(ansi_str) = key_down.get_ansi() {
                     let _ = console.write_str(ansi_str);
                 };
             }
         }
 
         old_keyboard_state = keyboard_state;
-        
+
         let _ = thread::sleep(100_000);
     }
-
 }
 
 #[panic_handler]
-fn panic_handler(info: &panic::PanicInfo) -> ! {
-    let _info_message = format!("{}", info);
-    nx::diag::abort::abort(abort::AbortLevel::Panic(), nx::rc::ResultPanicked::make());
+fn panic_handler(_info: &panic::PanicInfo) -> ! {
+    nx::diag::abort::abort(abort::AbortLevel::Panic(), nx::rc::ResultPanicked::make())
 }

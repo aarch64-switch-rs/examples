@@ -1,4 +1,3 @@
-#![feature(portable_simd)]
 #![no_std]
 #![no_main]
 
@@ -29,7 +28,6 @@ type RGBType = nx::gpu::canvas::RGBA4;
 
 #[no_mangle]
 pub fn main() {
-    
     let supported_tags =
         hid::NpadStyleTag::Handheld() | hid::NpadStyleTag::FullKey() | hid::NpadStyleTag::JoyDual();
     let input_ctx = input::Context::new(supported_tags, 1).unwrap();
@@ -43,11 +41,12 @@ pub fn main() {
         nx::gpu::canvas::Font::try_from_slice(include_bytes!("../../font/Roboto-Medium.ttf"))
             .unwrap();
 
-            let gpu_ctx = gpu::Context::new(
-                gpu::NvDrvServiceKind::Applet,
-                gpu::ViServiceKind::System,
-                0x40000,
-            ).unwrap();
+    let gpu_ctx = gpu::Context::new(
+        gpu::NvDrvServiceKind::Applet,
+        gpu::ViServiceKind::System,
+        0x40000,
+    )
+    .unwrap();
     let mut surface = match nx::gpu::canvas::CanvasManager::new_stray(
         Arc::new(RwLock::new(gpu_ctx)),
         Default::default(),
@@ -151,12 +150,9 @@ pub fn main() {
         });
         let _ = surface.wait_vsync_event(None);
     }
-
 }
 
 #[panic_handler]
 fn panic_handler(_info: &panic::PanicInfo) -> ! {
-    //let panic_str = format!("{}", info);
     nx::diag::abort::abort(abort::AbortLevel::Panic(), nx::rc::ResultPanicked::make());
-    //util::simple_panic_handler::<LmLogger>(info, abort::AbortLevel::FatalThrow())
 }

@@ -5,8 +5,9 @@ authors = ["XorTroll"]
 edition = "2021"
 
 [dependencies]
-embedded-term = "0.1.1"
-nx = { workspace = true , features = [ "input", "fs", "vty", "rand" ] }
+embedded-term = { git = "https://github.com/rcore-os/embedded-term", rev = "ce0fc1b30a883dba95f7d6ef794699100f178bd6", default-features = false }
+nx = { workspace = true, features = ["input", "fs", "vty", "rand"] }
+rand = { version = "0.10.2", default-features = false }
 
 [package.metadata.nx.nro]
 nacp = { default_name = "console-write-random", default_author = "XorTroll", version = "Example" }
